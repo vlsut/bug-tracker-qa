@@ -45,3 +45,11 @@ every change; the AI agent (Claude Code) implements and runs tests. Rules for th
 `CLAUDE.md`.
 **Why:** Mirrors how AI-assisted test automation is done in practice: the human owns test design
 and the bug-vs-test-error decision, the agent owns implementation.
+
+## D-008 · Tests run against a live server started by a fixture
+**Decision:** A session-scoped pytest fixture starts the Flask app as a real HTTP server
+(werkzeug `make_server` in a background thread, free port chosen by the OS). If `BT_BASE_URL` is
+set, tests use that already running app instead.
+**Why:** Playwright needs a real URL, so UI, API and mobile tests all hit the same running app
+over HTTP rather than Flask's test client. Binding the socket before the thread starts means
+no sleeps or readiness polling; a free port avoids clashes (e.g. AirPlay on 5000).
