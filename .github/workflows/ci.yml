@@ -75,12 +75,44 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked
 
+      # Test users come from GitHub Secrets (D-013); GitHub masks their values in logs.
       - name: Run tests
+        env:
+          TEST_ADMIN_USERNAME: ${{ secrets.TEST_ADMIN_USERNAME }}
+          TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+          TEST_USER_USERNAME: ${{ secrets.TEST_USER_USERNAME }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
         run: uv run pytest
 
-      # always(): the report matters most when tests fail.
-      - name: Upload HTML report
+      # Artifacts of a public repo are downloadable by anyone, and log masking does not apply
+      # to files, so check them for passwords before uploading. Never prints a value.
+      - name: Scan artifacts for leaked passwords
+        id: leak-scan
         if: always()
+        shell: bash
+        env:
+          TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          SCAN_PATHS: reports/
+        run: |
+          found=0
+          for name in TEST_ADMIN_PASSWORD TEST_USER_PASSWORD; do
+            value="${!name}"
+            if [ -z "$value" ]; then
+              echo "::warning::$name is not set; skipping the leak scan for it."
+              continue
+            fi
+            # shellcheck disable=SC2086 # SCAN_PATHS is a space-separated list
+            if grep -rqF -- "$value" $SCAN_PATHS 2>/dev/null; then
+              echo "::error::The value of $name was found in the artifacts ($SCAN_PATHS). Upload skipped."
+              found=1
+            fi
+          done
+          exit "$found"
+
+      # always(): the report matters most when tests fail — but never upload a leaked password.
+      - name: Upload HTML report
+        if: always() && steps.leak-scan.outcome == 'success'
         uses: actions/upload-artifact@v7
         with:
           name: pytest-report

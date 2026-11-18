@@ -11,8 +11,11 @@ Status: **Approved 2026-11-19** (after review RR-001; open items listed below).
 ### Test users
 | Username | Password | Role |
 |---|---|---|
-| `admin` | `Admin#2026` | admin |
-| `tester` | `Tester#2026` | user |
+| `admin` | `TEST_ADMIN_PASSWORD` | admin |
+| `tester` | `TEST_USER_PASSWORD` | user |
+
+Passwords are not stored in the repository. The table names the environment variables that hold
+them (`.env` locally, GitHub Secrets in CI); see `.env.example`.
 
 ### Requirements
 

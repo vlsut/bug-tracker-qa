@@ -93,3 +93,20 @@ and the owner's resolutions live in `docs/requirements-review.md`. Every test ca
 **Why:** Traceability from requirement to test case to automated test: coverage per requirement
 is visible, and a failing check can be judged against a stated requirement. Review RR-001 showed
 that test cases written without it checked behaviour no requirement stated (DEF-005).
+
+## D-013 · Test credentials from environment variables; .env via python-dotenv
+**Decision:** Test users' usernames and passwords are read from `TEST_ADMIN_USERNAME`,
+`TEST_ADMIN_PASSWORD`, `TEST_USER_USERNAME` and `TEST_USER_PASSWORD` in `config.py`. Locally they
+come from a git-ignored `.env` (template: `.env.example`), loaded with python-dotenv (runtime
+dependency); real environment variables take precedence. In CI they come from GitHub Secrets.
+Credentials are passed around as a `UserCredentials` object whose `repr` masks the password.
+**Why:** The repository is public, so passwords must not be in code, docs or history from now on.
+python-dotenv is the standard `.env` loader and Flask's CLI uses it automatically when installed,
+so `flask run` and pytest read the same `.env`. Masking the password in `repr` keeps it out of
+pytest assertion output and reports.
+**CI:** Only the "Run tests" step gets the secrets. Before uploading artifacts, CI scans them for
+the password values (log masking does not apply to files, and artifacts of a public repo are
+downloadable by anyone); on a match the upload is skipped and the job fails, naming only the
+variable. Playwright traces record typed text, so they are kept locally and never uploaded.
+**Note:** The passwords previously in `docs/` remain in git history; they are retired, and new
+values are used.
