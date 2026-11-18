@@ -53,6 +53,21 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # A mismatch would otherwise surface much later as a vague "browser executable not found".
+      # The tag is read from this file because steps cannot see the job's image name.
+      - name: Check Playwright image matches uv.lock
+        run: |
+          image_version=$(grep -oE 'mcr\.microsoft\.com/playwright/python:v[0-9.]+' \
+            .github/workflows/ci.yml | head -n 1 | sed 's/.*:v//')
+          # In uv.lock, a package's version is the line right after its name.
+          lock_version=$(grep -A1 '^name = "playwright"$' uv.lock \
+            | sed -n 's/^version = "\(.*\)"$/\1/p')
+          if [ -z "$image_version" ] || [ "$image_version" != "$lock_version" ]; then
+            echo "::error file=.github/workflows/ci.yml::Playwright container tag (v${image_version:-?}) does not match playwright ${lock_version:-?} in uv.lock. Update the image tag in ci.yml together with uv.lock."
+            exit 1
+          fi
+          echo "Playwright image v$image_version matches uv.lock."
+
       - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
