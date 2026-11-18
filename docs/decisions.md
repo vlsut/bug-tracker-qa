@@ -53,3 +53,35 @@ set, tests use that already running app instead.
 **Why:** Playwright needs a real URL, so UI, API and mobile tests all hit the same running app
 over HTTP rather than Flask's test client. Binding the socket before the thread starts means
 no sleeps or readiness polling; a free port avoids clashes (e.g. AirPlay on 5000).
+
+## D-009 · Every task through a branch and a pull request
+**Decision:** Each task is done on its own branch (`<type>/<short-topic>`) and lands in `main`
+only through a pull request. CI runs on every pull request and on pushes to `main`; the QA lead
+merges after CI is green. The agent never pushes to `main` and never merges.
+**Why:** `main` stays green and every change is reviewed and tested before it lands — the same
+flow a production team uses. Running CI on pull requests plus `main` (not on every branch push)
+avoids running the same commit twice.
+
+## D-010 · CI runner pinned to ubuntu-24.04, with job timeouts
+**Decision:** CI jobs run on `ubuntu-24.04`, not `ubuntu-latest`. Job timeouts: 10 minutes for
+Lint, 20 minutes for Tests.
+**Why:** `ubuntu-latest` moved to Ubuntu 26.04. There, `playwright install --with-deps` had to
+download ~185 system packages (140 MB) and a slow apt mirror stalled the Tests job for over
+10 minutes with no time limit (GitHub's default is 6 hours). A pinned OS makes CI reproducible
+and changes it only on purpose; Ubuntu 24.04 is officially supported by Playwright. Timeouts make
+a stuck run fail quickly instead of blocking the PR.
+**Revisit:** when Playwright officially supports Ubuntu 26.04, or if apt installs stay slow
+(option: the official Playwright container image, not adopted for now).
+
+## D-011 · Tests job runs in the official Playwright container
+**Decision:** The CI Tests job runs inside `mcr.microsoft.com/playwright/python`, with browsers
+and their system libraries preinstalled. The `playwright install --with-deps` step is removed.
+Updates D-010: the runner stays pinned to `ubuntu-24.04` and the job timeouts stay; only the
+browser setup changes.
+**Why:** On both Ubuntu 26.04 and 24.04 runners, the apt install of browser dependencies
+(~185 packages, 126–140 MB) stalled for 10+ minutes: the Ubuntu archive mirror served packages
+with 40–150 s gaps, so the problem is the mirror, not the OS version. The image removes apt from
+CI entirely.
+**Trade-off:** The image tag must match the `playwright` version in `uv.lock` (the Python
+package only works with browser builds from the same release). They are updated together;
+`ci.yml` says so next to the image tag.

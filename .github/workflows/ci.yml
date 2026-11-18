@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch or PR makes the older run obsolete.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    # Pinned rather than ubuntu-latest so the OS changes only on purpose (D-010).
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      # setup-uv publishes no floating major tag, so the exact release is pinned.
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+
+      # --locked fails the build if uv.lock is out of date with pyproject.toml.
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Ruff check
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+  test:
+    name: Tests
+    runs-on: ubuntu-24.04
+    # A stuck step (e.g. a slow apt mirror) fails fast instead of hitting the 6 h default.
+    timeout-minutes: 20
+    # Browsers and their system libraries come preinstalled in the official image, so no
+    # apt install at CI time (D-011).
+    # The image tag MUST match the playwright version in uv.lock: the Python package only
+    # works with the browser builds of the same release. Update both together.
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.65.2-noble
+      # Recommended by Playwright for Chromium in Docker (avoids running out of /dev/shm).
+      options: --ipc=host
+    steps:
+      - uses: actions/checkout@v7
+
+      # A mismatch would otherwise surface much later as a vague "browser executable not found".
+      # The tag is read from this file because steps cannot see the job's image name.
+      - name: Check Playwright image matches uv.lock
+        run: |
+          image_version=$(grep -oE 'mcr\.microsoft\.com/playwright/python:v[0-9.]+' \
+            .github/workflows/ci.yml | head -n 1 | sed 's/.*:v//')
+          # In uv.lock, a package's version is the line right after its name.
+          lock_version=$(grep -A1 '^name = "playwright"$' uv.lock \
+            | sed -n 's/^version = "\(.*\)"$/\1/p')
+          if [ -z "$image_version" ] || [ "$image_version" != "$lock_version" ]; then
+            echo "::error file=.github/workflows/ci.yml::Playwright container tag (v${image_version:-?}) does not match playwright ${lock_version:-?} in uv.lock. Update the image tag in ci.yml together with uv.lock."
+            exit 1
+          fi
+          echo "Playwright image v$image_version matches uv.lock."
+
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Run tests
+        run: uv run pytest
+
+      # always(): the report matters most when tests fail.
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pytest-report
+          path: reports/
+          retention-days: 14
