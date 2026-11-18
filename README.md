@@ -1,5 +1,7 @@
 # bug-tracker-qa
 
+[![CI](https://github.com/vlsut/bug-tracker-qa/actions/workflows/ci.yml/badge.svg)](https://github.com/vlsut/bug-tracker-qa/actions/workflows/ci.yml)
+
 A small Bug Tracker web app (Flask + SQLite) and an automated test framework for it
 at three levels — UI, API and database — plus verification of an Excel report against the
 database and mobile web testing on emulated devices.
