@@ -16,7 +16,9 @@ permissions:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    # Pinned rather than ubuntu-latest so the OS changes only on purpose (D-010).
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
 
@@ -37,7 +39,9 @@ jobs:
 
   test:
     name: Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    # A stuck step (e.g. a slow apt mirror) fails fast instead of hitting the 6 h default.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
 

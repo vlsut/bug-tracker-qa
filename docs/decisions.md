@@ -61,3 +61,14 @@ merges after CI is green. The agent never pushes to `main` and never merges.
 **Why:** `main` stays green and every change is reviewed and tested before it lands — the same
 flow a production team uses. Running CI on pull requests plus `main` (not on every branch push)
 avoids running the same commit twice.
+
+## D-010 · CI runner pinned to ubuntu-24.04, with job timeouts
+**Decision:** CI jobs run on `ubuntu-24.04`, not `ubuntu-latest`. Job timeouts: 10 minutes for
+Lint, 20 minutes for Tests.
+**Why:** `ubuntu-latest` moved to Ubuntu 26.04. There, `playwright install --with-deps` had to
+download ~185 system packages (140 MB) and a slow apt mirror stalled the Tests job for over
+10 minutes with no time limit (GitHub's default is 6 hours). A pinned OS makes CI reproducible
+and changes it only on purpose; Ubuntu 24.04 is officially supported by Playwright. Timeouts make
+a stuck run fail quickly instead of blocking the PR.
+**Revisit:** when Playwright officially supports Ubuntu 26.04, or if apt installs stay slow
+(option: the official Playwright container image, not adopted for now).
