@@ -53,3 +53,11 @@ set, tests use that already running app instead.
 **Why:** Playwright needs a real URL, so UI, API and mobile tests all hit the same running app
 over HTTP rather than Flask's test client. Binding the socket before the thread starts means
 no sleeps or readiness polling; a free port avoids clashes (e.g. AirPlay on 5000).
+
+## D-009 · Every task through a branch and a pull request
+**Decision:** Each task is done on its own branch (`<type>/<short-topic>`) and lands in `main`
+only through a pull request. CI runs on every pull request and on pushes to `main`; the QA lead
+merges after CI is green. The agent never pushes to `main` and never merges.
+**Why:** `main` stays green and every change is reviewed and tested before it lands — the same
+flow a production team uses. Running CI on pull requests plus `main` (not on every branch push)
+avoids running the same commit twice.

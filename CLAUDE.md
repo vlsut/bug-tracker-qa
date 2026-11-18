@@ -34,13 +34,19 @@ depends on lives here, not in chats:
 1. Read the relevant test case in `docs/test-cases.md`. If it is missing or unclear — ask,
    do not invent requirements.
 2. Propose a short plan: files to touch, approach, what will be checked. Wait for OK.
-3. Implement in small, reviewable increments.
-4. Run linters and the relevant tests; show the result (passed / failed, short error).
-5. Summarise the change in a few lines and propose a commit message
+3. Create a branch for the task from an up-to-date `main`, named `<type>/<short-topic>`
+   using the Conventional Commits type (e.g. `feat/login-page`, `ci/github-actions`).
+4. Implement in small, reviewable increments.
+5. Run linters and the relevant tests; show the result (passed / failed, short error).
+6. Summarise the change in a few lines and propose a commit message
    (Conventional Commits: `feat:`, `fix:`, `test:`, `refactor:`, `ci:`, `docs:`, `chore:`).
-6. Commit only after the user's OK. One logical change per commit.
+7. Commit only after the user's OK. One logical change per commit.
+8. Push the branch, open a pull request, and report the PR link and the CI result.
+   The user reviews and merges once CI is green.
 
 ## Hard rules
+- **Never push to `main` and never merge a pull request.** Every task goes through its own
+  branch and PR; merging is the user's decision.
 - **Never change a test just to make it pass.** If a test fails: stop, show the error, say whether it
   looks like an app bug or a test bug and why. The user decides.
 - **Never weaken an assertion** (remove a check, widen an expected value, add a skip/xfail) without
