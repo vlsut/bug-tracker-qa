@@ -85,3 +85,11 @@ CI entirely.
 **Trade-off:** The image tag must match the `playwright` version in `uv.lock` (the Python
 package only works with browser builds from the same release). They are updated together;
 `ci.yml` says so next to the image tag.
+
+## D-012 · Requirements are the basis for test cases
+**Decision:** Approved requirements live in `docs/requirements.md` with stable IDs; their reviews
+and the owner's resolutions live in `docs/requirements-review.md`. Every test case in
+`docs/test-cases.md` names the requirement IDs it covers.
+**Why:** Traceability from requirement to test case to automated test: coverage per requirement
+is visible, and a failing check can be judged against a stated requirement. Review RR-001 showed
+that test cases written without it checked behaviour no requirement stated (DEF-005).

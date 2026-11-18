@@ -34,7 +34,7 @@ api/        API client
 utils/      SQL helpers, Excel-vs-DB comparison
 config.py   settings from environment variables
 tests/      ui / api / db / e2e / mobile
-docs/       test cases and decision log
+docs/       requirements and their review, test cases, decision log
 ```
 
 ## License
