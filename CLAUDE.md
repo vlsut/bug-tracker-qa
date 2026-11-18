@@ -25,7 +25,12 @@ reports results honestly.
 The GitHub repository is the single source of truth for the project. Everything the project
 depends on lives here, not in chats:
 - `CLAUDE.md` — rules for the agent;
-- `docs/test-cases.md` — what to test (owned by the user);
+- `docs/requirements.md` — approved requirements with stable IDs (R1, R4.2, …), open items and
+  out-of-scope decisions (owned by the user). Requirements are the basis for test cases.
+- `docs/requirements-review.md` — requirements reviews (RR-00N): findings and the owner's
+  resolutions that led to the approved requirements.
+- `docs/test-cases.md` — what to test (owned by the user). Every test case refers to the
+  requirement IDs it covers; a behaviour without a requirement is not tested until one is added.
 - `docs/decisions.md` — decision log: what was decided and why. Read it before proposing changes
   to stack or architecture. When a new decision is made, add an entry (D-00N) in the same commit.
 - `README.md` — project overview for people.
@@ -89,6 +94,8 @@ utils/report_compare.py  Excel report vs database comparison
 config.py                settings from environment variables
 tests/ui/  tests/api/  tests/db/  tests/e2e/  tests/mobile/
 tests/conftest.py        fixtures: app server, browser page, API client, clean DB, test users
+docs/requirements.md     approved requirements (owned by the user)
+docs/requirements-review.md  requirements reviews and resolutions
 docs/test-cases.md       test cases (owned by the user)
 docs/decisions.md        decision log
 .github/workflows/       CI: lint + all tests on every push and pull request; report as artifact
