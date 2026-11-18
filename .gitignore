@@ -1,0 +1,29 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+
+# App data
+*.db
+*.sqlite
+*.sqlite3
+
+# Test output
+reports/
+test-results/
+downloads/
+*.xlsx
+!tests/data/**/*.xlsx
+
+# Local / secrets
+.env
+.claude/settings.local.json
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
