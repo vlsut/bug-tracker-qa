@@ -104,5 +104,9 @@ Credentials are passed around as a `UserCredentials` object whose `repr` masks t
 python-dotenv is the standard `.env` loader and Flask's CLI uses it automatically when installed,
 so `flask run` and pytest read the same `.env`. Masking the password in `repr` keeps it out of
 pytest assertion output and reports.
+**CI:** Only the "Run tests" step gets the secrets. Before uploading artifacts, CI scans them for
+the password values (log masking does not apply to files, and artifacts of a public repo are
+downloadable by anyone); on a match the upload is skipped and the job fails, naming only the
+variable. Playwright traces record typed text, so they are kept locally and never uploaded.
 **Note:** The passwords previously in `docs/` remain in git history; they are retired, and new
 values are used.
