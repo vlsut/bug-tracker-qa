@@ -42,6 +42,14 @@ jobs:
     runs-on: ubuntu-24.04
     # A stuck step (e.g. a slow apt mirror) fails fast instead of hitting the 6 h default.
     timeout-minutes: 20
+    # Browsers and their system libraries come preinstalled in the official image, so no
+    # apt install at CI time (D-011).
+    # The image tag MUST match the playwright version in uv.lock: the Python package only
+    # works with the browser builds of the same release. Update both together.
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.65.2-noble
+      # Recommended by Playwright for Chromium in Docker (avoids running out of /dev/shm).
+      options: --ipc=host
     steps:
       - uses: actions/checkout@v7
 
@@ -51,10 +59,6 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --locked
-
-      # --with-deps installs the Linux system libraries WebKit needs.
-      - name: Install Playwright browsers
-        run: uv run playwright install --with-deps chromium webkit
 
       - name: Run tests
         run: uv run pytest

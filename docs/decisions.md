@@ -72,3 +72,16 @@ and changes it only on purpose; Ubuntu 24.04 is officially supported by Playwrig
 a stuck run fail quickly instead of blocking the PR.
 **Revisit:** when Playwright officially supports Ubuntu 26.04, or if apt installs stay slow
 (option: the official Playwright container image, not adopted for now).
+
+## D-011 · Tests job runs in the official Playwright container
+**Decision:** The CI Tests job runs inside `mcr.microsoft.com/playwright/python`, with browsers
+and their system libraries preinstalled. The `playwright install --with-deps` step is removed.
+Updates D-010: the runner stays pinned to `ubuntu-24.04` and the job timeouts stay; only the
+browser setup changes.
+**Why:** On both Ubuntu 26.04 and 24.04 runners, the apt install of browser dependencies
+(~185 packages, 126–140 MB) stalled for 10+ minutes: the Ubuntu archive mirror served packages
+with 40–150 s gaps, so the problem is the mirror, not the OS version. The image removes apt from
+CI entirely.
+**Trade-off:** The image tag must match the `playwright` version in `uv.lock` (the Python
+package only works with browser builds from the same release). They are updated together;
+`ci.yml` says so next to the image tag.
