@@ -26,8 +26,11 @@ def write(tmp_path: Path, text: str) -> Path:
 def test_real_document_parses_into_all_test_cases() -> None:
     cases = parse()
 
-    assert [case.id for case in cases] == [f"TC-LOGIN-{n:03d}" for n in range(1, 15)]
-    first = cases[0]
+    ids = [case.id for case in cases]
+    assert len(ids) == len(set(ids))
+    # The document grows with every feature; the login cases must stay in it.
+    assert {f"TC-LOGIN-{n:03d}" for n in range(1, 15)} <= set(ids)
+    first = next(case for case in cases if case.id == "TC-LOGIN-001")
     assert first.summary == "TC-LOGIN-001 · Successful login (user)"
     assert (first.priority, first.level, first.requirements) == ("High", "UI", ["R1", "R2"])
     assert first.markers == ["ui", "smoke"]
