@@ -149,6 +149,8 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo[None]) ->
     """Copy the test case and requirement IDs onto the report for the HTML columns."""
     outcome = yield
     report = outcome.get_result()
+    # Lets fixtures see in teardown whether the test failed (rep_setup, rep_call).
+    setattr(item, f"rep_{report.when}", report)
     report.test_cases = ", ".join(_marker_args(item, "tc"))
     report.requirements = ", ".join(_marker_args(item, "req"))
 

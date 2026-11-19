@@ -43,7 +43,9 @@ quote-style = "double"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "--strict-markers --html=reports/report.html --self-contained-html"
+# Screenshots and traces of failed UI tests go to test-results/; traces stay local (D-013).
+addopts = """--strict-markers --html=reports/report.html --self-contained-html
+  --screenshot=only-on-failure --tracing=retain-on-failure --output=test-results"""
 markers = [
     "ui: UI tests through the browser (Playwright)",
     "api: JSON API tests (requests)",
