@@ -175,3 +175,14 @@ the outcome (D-007): what the requirements mean, what is tested, and what gets m
 self-review checklist catches common test-case defects (several checks in one case,
 unverifiable results, undefined data, dependent cases, duplicates, untraced cases) before the
 owner spends time on them.
+
+## D-019 · Reconcile with existing test cases before drafting new ones
+**Decision:** Extends D-018. In the "Feature workflow", writing test cases (step 5) starts with a
+reconciliation against `docs/test-cases.md`: map each requirement to the existing cases that
+cover it, flag duplicates and outdated cases (with the `wiegers-requirements-checker` skill's
+Change Impact Review mode when requirements changed), and draft only what is missing. The
+reconciliation table (requirement → existing / new / outdated case) is shown together with the
+draft at the test-case approval STOP. The rest of D-018 is unchanged.
+**Why:** It keeps one case per behaviour: requirements already covered are not tested twice, and
+cases made obsolete by changed requirements are found instead of silently kept. The owner sees
+the effect on the existing suite, not only the new cases, before approving.
