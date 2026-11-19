@@ -186,3 +186,51 @@ draft at the test-case approval STOP. The rest of D-018 is unchanged.
 **Why:** It keeps one case per behaviour: requirements already covered are not tested twice, and
 cases made obsolete by changed requirements are found instead of silently kept. The owner sees
 the effect on the existing suite, not only the new cases, before approving.
+
+## D-020 · Test cases are exported to Jira as Tasks, found again by their ID label
+**Decision:** `tools/jira_export.py` creates one Jira issue per test case in `docs/test-cases.md`
+(project `JIRA_PROJECT_KEY`, issue type `JIRA_ISSUE_TYPE`, default `Task`). Summary
+`TC-LOGIN-001 · Successful login (user)`; description (Atlassian Document Format) with priority,
+level, markers, covered requirements, preconditions, data, numbered steps, expected result and
+notes; labels `test-case`, the requirement IDs and the test case ID; Jira priority = test case
+priority. The test case ID label is the lookup key (`labels = "TC-LOGIN-001"`): none → create,
+one → update if changed, more than one → error, nothing written. Change detection compares
+summary, issue type, priority, the export's own labels and a fingerprint of the generated content
+stored in the description footer. Labels people add in Jira are kept; issues labelled
+`test-case` whose case is no longer in the docs are reported, never deleted. `--dry-run` makes
+read-only lookups and writes nothing. Credentials come from `JIRA_*` in `.env`; the token is masked
+in `repr` and never part of output or errors. Tests use an in-memory fake of the Jira API; CI
+never calls Jira.
+**Why:** BTQA (team-managed) has no test issue type (no Xray/Zephyr); Task is the closest
+standalone work item, and the type is configurable if a "Test Case" type is added later. Labels
+match exactly in JQL, while summary search is tokenised, so the ID label makes reruns idempotent.
+Jira normalises stored descriptions, so comparing them field by field would report false changes;
+the fingerprint does not. `docs/test-cases.md` stays the source, so Jira edits are overwritten on
+the next change (the footer says so).
+**Alternatives considered:** summary search (fuzzy, duplicates possible); issue entity properties
+(invisible, one extra call per issue); a Jira test-management app (not installed).
+**Known limitations:** Jira search is eventually consistent, so two runs within a few seconds
+could create duplicates; the next run detects them and writes nothing for those cases. Revisit
+if the export ever runs automatically (e.g. from CI).
+
+## D-021 · docs/test-cases.md stays the source of test cases, read by a strict parser
+**Decision:** Test cases stay in Markdown, edited by the QA lead. `tools/case_parser.py` reads
+them; the format is a contract: an unknown field, a missing Priority line, Steps or Expected, a
+malformed line, a priority outside High/Medium/Low, a malformed requirement ID or a duplicate ID
+stops parsing with the case ID and line number. A test parses the real document in CI, so a
+format slip fails the PR, not the export.
+**Why:** One file, readable in PR diffs, and the QA lead's workflow stays unchanged. A YAML source
+generating the Markdown would enforce structure by schema, but it means two files, a generator, a
+CI check that they match, editing YAML instead of prose, and lost hand edits in the generated
+file. The cases already follow a regular format, so a strict parser gets most of the safety.
+**Revisit:** when the suite grows to hundreds of cases or needs fields that Markdown carries
+badly (e.g. structured data tables, links between cases).
+
+## D-022 · Tests of internal tools are exempt from the requirement marker
+**Decision:** Tests marked `tooling` (tests of internal tools such as the test-case parser and the
+Jira export, in `tests/tools/`) are skipped by the traceability check that requires a
+`req(...)` marker on every test.
+**Why:** A deliberate exception: the requirement rule (D-012) covers product behaviour — what the
+Bug Tracker must do for its users. Internal tools are not product behaviour and have no entries in
+`docs/requirements.md`; inventing product requirements for them would blur the traceability the
+rule exists for. Their expected behaviour is recorded in their decision entries (D-020, D-021).

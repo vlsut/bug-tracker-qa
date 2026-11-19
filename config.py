@@ -77,3 +77,34 @@ def regular_user() -> UserCredentials:
         password=_require("TEST_USER_PASSWORD"),
         role="user",
     )
+
+
+@dataclass(frozen=True)
+class JiraSettings:
+    """Connection to Jira for the test-case export (D-020).
+
+    The API token is masked in ``repr`` so it never reaches logs, output or error messages.
+    """
+
+    base_url: str
+    email: str
+    api_token: str
+    project_key: str
+    issue_type: str
+
+    def __repr__(self) -> str:
+        return (
+            f"JiraSettings(base_url={self.base_url!r}, email={self.email!r}, api_token='***', "
+            f"project_key={self.project_key!r}, issue_type={self.issue_type!r})"
+        )
+
+
+def jira_settings() -> JiraSettings:
+    """Jira settings from JIRA_* variables; JIRA_ISSUE_TYPE defaults to "Task"."""
+    return JiraSettings(
+        base_url=_require("JIRA_BASE_URL").rstrip("/"),
+        email=_require("JIRA_EMAIL"),
+        api_token=_require("JIRA_API_TOKEN"),
+        project_key=_require("JIRA_PROJECT_KEY"),
+        issue_type=os.getenv("JIRA_ISSUE_TYPE") or "Task",
+    )

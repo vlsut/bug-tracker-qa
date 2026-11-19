@@ -134,6 +134,9 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     known_tcs = _ids_in(TEST_CASES_DOC, r"\bTC-[A-Z]+-\d{3}\b")
     problems = []
     for item in items:
+        # Deliberate exception (D-022): the req rule covers product behaviour, not internal tools.
+        if item.get_closest_marker("tooling"):
+            continue
         reqs = _marker_args(item, "req")
         if not reqs:
             problems.append(f"{item.nodeid}: no @pytest.mark.req(...)")
