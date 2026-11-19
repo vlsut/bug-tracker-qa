@@ -92,6 +92,7 @@ Test users: see the test users table there. Passwords are referred to by their e
 
 ### TC-LOGIN-013 · Session expires after inactivity
 - **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R8, R5
-- **Preconditions:** session timeout set to a short test value via config.
-- **Steps:** 1. Log in as `tester`. 2. Wait longer than the timeout without requests. 3. Request `/bugs`.
-- **Expected:** step 3 → redirected to `/login`.
+- **Preconditions:** the session timeout is taken from config (`BT_SESSION_IDLE_TIMEOUT`).
+- **Data (parametrized):** `expired` — last activity timeout + 1 s ago; `just-inside` — last activity timeout − 60 s ago (boundary check).
+- **Steps:** 1. Log in as `tester`. 2. Set the session's last activity in the database to the data row's value (instead of waiting). 3. Request `/bugs`.
+- **Expected:** `expired` → step 3 is redirected to `/login`; `just-inside` → step 3 shows `/bugs` (the session is still valid).
