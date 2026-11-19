@@ -1,7 +1,8 @@
 # Spec: Bugs — list, create, close, JSON API
 
-- **Status:** Approved by the owner 2026-11-19 (Feature workflow step 0). Next: requirements
-  review RR-002.
+- **Status:** Approved by the owner 2026-11-19 (Feature workflow step 0). Reviewed in RR-002; the
+  open questions in section 9 are decided in its Resolution. The approved requirements are
+  R10–R22 in `docs/requirements.md` → "Bugs"; where they are more precise, they take precedence.
 - **Source:** interview with the owner (QA lead), 2026-11-19. Every statement below was confirmed
   in that interview. Statements tagged [DERIVED] follow from an approved requirement (the
   reasoning is given) and were confirmed by the owner at approval. The items under
