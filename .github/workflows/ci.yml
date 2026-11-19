@@ -84,6 +84,19 @@ jobs:
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
         run: uv run pytest
 
+      # Only the HTML report and failure screenshots are published. Playwright traces record
+      # typed text (passwords included), so they stay in test-results/ and are never uploaded.
+      - name: Collect artifacts
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          [ -d reports ] && cp -R reports artifacts/
+          if [ -d test-results ]; then
+            find test-results -name '*.png' -exec cp --parents {} artifacts/ \;
+          fi
+          true
+
       # Artifacts of a public repo are downloadable by anyone, and log masking does not apply
       # to files, so check them for passwords before uploading. Never prints a value.
       - name: Scan artifacts for leaked passwords
@@ -93,7 +106,7 @@ jobs:
         env:
           TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-          SCAN_PATHS: reports/
+          SCAN_PATHS: artifacts/
         run: |
           found=0
           for name in TEST_ADMIN_PASSWORD TEST_USER_PASSWORD; do
@@ -111,10 +124,10 @@ jobs:
           exit "$found"
 
       # always(): the report matters most when tests fail — but never upload a leaked password.
-      - name: Upload HTML report
+      - name: Upload report and screenshots
         if: always() && steps.leak-scan.outcome == 'success'
         uses: actions/upload-artifact@v7
         with:
           name: pytest-report
-          path: reports/
+          path: artifacts/
           retention-days: 14

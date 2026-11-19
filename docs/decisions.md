@@ -120,3 +120,24 @@ owner's resolution.
 chat or the person running it; the skill is part of the repository like any other tool
 configuration, so its version is visible next to the reviews it produced. Keeping reviews and
 resolutions in one file gives a history of how each requirement was decided.
+
+## D-015 · Server-side sessions; scrypt password hashes
+**Decision:** Sessions are stored in the `sessions` table; the cookie (`bt_session`, HttpOnly,
+SameSite=Lax) holds only a random token. Logout deletes the row; a session idle for longer than
+`BT_SESSION_IDLE_TIMEOUT` seconds (default 1800) is deleted on its next use. Passwords are hashed
+with Werkzeug's `generate_password_hash` (scrypt, random salt per hash).
+**Why:** Flask's default session lives entirely in a signed cookie, so a copied cookie stays valid
+after logout — R6.1 requires the server to reject it. A server-side row also gives the idle
+timeout (R8) one place to check and lets tests reach session state through the database.
+Werkzeug ships with Flask, so R7 needs no extra dependency; scrypt is salted and adaptive.
+
+## D-016 · Session expiry is tested through the database, not by waiting
+**Decision:** The expiry test (TC-LOGIN-013) logs in, then moves the session's `last_seen_at`
+into the past with `DbManager.set_session_idle()` and requests a protected page. Two data rows:
+idle for timeout + 1 s (expired) and for timeout − 60 s (still valid, boundary check).
+**Why:** Sleeping is banned (flaky and slow), and a 30-minute timeout cannot be waited out in CI.
+Rewriting the stored timestamp exercises the app's real expiry check with the real timeout and
+needs no test-only code in the app (unlike an injectable clock). The 60 s margin on the boundary
+row absorbs the real clock moving between the update and the request.
+**Limit:** It relies on direct database access, so it works only where the tests can reach the
+app's database (true for the in-process server and a local external server).

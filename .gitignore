@@ -15,6 +15,7 @@ __pycache__/
 # Test output
 reports/
 test-results/
+artifacts/
 downloads/
 *.xlsx
 !tests/data/**/*.xlsx

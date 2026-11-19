@@ -43,7 +43,9 @@ quote-style = "double"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "--strict-markers --html=reports/report.html --self-contained-html"
+# Screenshots and traces of failed UI tests go to test-results/; traces stay local (D-013).
+addopts = """--strict-markers --html=reports/report.html --self-contained-html
+  --screenshot=only-on-failure --tracing=retain-on-failure --output=test-results"""
 markers = [
     "ui: UI tests through the browser (Playwright)",
     "api: JSON API tests (requests)",
@@ -51,4 +53,6 @@ markers = [
     "e2e: end-to-end scenarios across several levels",
     "smoke: fast checks that the app is up and basic flows work",
     "mobile: responsive layout on emulated mobile devices",
+    "req(*ids): requirement IDs from docs/requirements.md that the test covers (mandatory)",
+    "tc(*ids): test case IDs from docs/test-cases.md that the test automates",
 ]

@@ -19,6 +19,15 @@ BASE_URL: str | None = os.getenv("BT_BASE_URL") or None
 DB_PATH: Path = Path(os.getenv("BT_DB_PATH", str(PROJECT_ROOT / "bug_tracker.db")))
 HEADLESS: bool = os.getenv("BT_HEADLESS", "true").lower() in {"1", "true", "yes"}
 REQUEST_TIMEOUT: float = float(os.getenv("BT_REQUEST_TIMEOUT", "10"))
+# R8: idle timeout in seconds; configurable so it can be changed without code changes.
+SESSION_IDLE_TIMEOUT: int = int(os.getenv("BT_SESSION_IDLE_TIMEOUT", "1800"))
+# Emulated devices for mobile tests: Playwright device descriptor names. Each descriptor picks
+# its own browser (iPhone and iPad: WebKit, Pixel: Chromium). Comma-separated override.
+MOBILE_DEVICES: tuple[str, ...] = tuple(
+    name.strip()
+    for name in os.getenv("BT_MOBILE_DEVICES", "iPhone 15,Pixel 7,iPad (gen 7)").split(",")
+    if name.strip()
+)
 
 
 class MissingSettingError(RuntimeError):
