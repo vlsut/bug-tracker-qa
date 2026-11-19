@@ -130,3 +130,14 @@ with Werkzeug's `generate_password_hash` (scrypt, random salt per hash).
 after logout — R6.1 requires the server to reject it. A server-side row also gives the idle
 timeout (R8) one place to check and lets tests reach session state through the database.
 Werkzeug ships with Flask, so R7 needs no extra dependency; scrypt is salted and adaptive.
+
+## D-016 · Session expiry is tested through the database, not by waiting
+**Decision:** The expiry test (TC-LOGIN-013) logs in, then moves the session's `last_seen_at`
+into the past with `DbManager.set_session_idle()` and requests a protected page. Two data rows:
+idle for timeout + 1 s (expired) and for timeout − 60 s (still valid, boundary check).
+**Why:** Sleeping is banned (flaky and slow), and a 30-minute timeout cannot be waited out in CI.
+Rewriting the stored timestamp exercises the app's real expiry check with the real timeout and
+needs no test-only code in the app (unlike an injectable clock). The 60 s margin on the boundary
+row absorbs the real clock moving between the update and the request.
+**Limit:** It relies on direct database access, so it works only where the tests can reach the
+app's database (true for the in-process server and a local external server).
