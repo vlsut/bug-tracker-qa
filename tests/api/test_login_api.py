@@ -91,3 +91,18 @@ def test_session_expires_after_idle_timeout(
     response = api_client.get("/bugs")
 
     assert api_client.path_of(response) == expected_path
+
+
+@pytest.mark.api
+@pytest.mark.req("R6.2")
+@pytest.mark.tc("TC-LOGIN-014")
+def test_protected_page_is_sent_with_no_store(
+    api_client: ApiClient, regular_user: UserCredentials
+) -> None:
+    api_client.login(regular_user)
+
+    response = api_client.get("/bugs")
+
+    assert api_client.path_of(response) == "/bugs"
+    cache_directives = [d.strip() for d in response.headers.get("Cache-Control", "").split(",")]
+    assert "no-store" in cache_directives
