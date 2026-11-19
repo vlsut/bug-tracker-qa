@@ -311,6 +311,14 @@ Approved requirements: `docs/requirements.md` → "Bugs" (R10–R22).
 | OBS-002 | Noted: no paging is a scope decision | Out of scope |
 | Coverage note (mobile) | All bug pages must fit the devices in the device list without horizontal scrolling | R20 |
 
+**Changes after the test-case audit (2026-11-19).** An audit of the test cases (before
+implementation) found two gaps; the owner decided:
+
+| Source | Decision | Result |
+|---|---|---|
+| Audit: R18 did not say whether the UI's minute format truncates or rounds | The UI truncates: `14:05:59` is shown as `14:05` | R18 extended |
+| Audit: R13.1 vs R12 for emoji | The form enforces only required fields; length limits are enforced only by the server, with a message after submit. Reason: a browser's `maxlength` counts UTF-16 code units (an emoji such as 🐞 counts as 2), while R12 counts Unicode code points, so a form limit of 200 would stop at 100 emoji and contradict R12 | R13.1 changed (was: the form does not accept more than 200 / 2000 characters) |
+
 **Status after resolution:** all findings decided; none left open. Requirements Readiness — Ready;
 Test Design Readiness — Ready; Automation Readiness — Ready (list order deterministic by R18;
 seeded users, session login and local DB available). Not Assessed: accessibility and performance

@@ -117,9 +117,9 @@ including tabs and newlines.
   case-sensitive; a missing or other value is rejected.
 
 **R13. Where the field rules are enforced.**
-- R13.1 (UI): the create form marks title and severity as required and does not accept more than
-  200 characters of title or 2000 of description; a form with an empty required field is not
-  submitted.
+- R13.1 (UI): the create form marks title and severity as required; a form with an empty required
+  field is not submitted. The form does not limit the length of title or description: length
+  limits are enforced only by the server (R13.2), which shows a message after submit.
 - R13.2 (server): the server applies R12 to every request, whether it comes from the form or the
   API. Rejected input creates no bug; the UI shows a message for each invalid field (the wording
   is not fixed; tests check that the message is present), the API answers as in R22.3.
@@ -146,8 +146,9 @@ current user. In the UI the user stays on the bug page, sees the message "Bug cl
   keep their values); the UI shows a message; the API answers 409.
 
 **R18. Timestamps.**
-`created_at` and `closed_at` are stored in UTC, to the second. UI format: `2026-11-19 14:05 UTC`.
-API format: ISO 8601 with `Z`, e.g. `2026-11-19T14:05:00Z`.
+`created_at` and `closed_at` are stored in UTC, to the second. UI format: `2026-11-19 14:05 UTC`;
+the UI truncates to the minute, it does not round (`14:05:59` is shown as `14:05`). API format:
+ISO 8601 with `Z`, e.g. `2026-11-19T14:05:00Z`.
 
 **R19. User text is shown as plain text.**
 Markup in title and description (e.g. `<script>`, `<b>`) is stored as typed and shown as plain
