@@ -25,6 +25,8 @@ reports results honestly.
 The GitHub repository is the single source of truth for the project. Everything the project
 depends on lives here, not in chats:
 - `CLAUDE.md` — rules for the agent;
+- `docs/specs/<feature>.md` — feature documentation from the user; the input of the
+  "Feature workflow".
 - `docs/requirements.md` — approved requirements with stable IDs (R1, R4.2, …), open items and
   out-of-scope decisions (owned by the user). Requirements are the basis for test cases.
 - `docs/requirements-review.md` — requirements reviews: findings and the owner's resolutions
@@ -51,9 +53,46 @@ depends on lives here, not in chats:
 8. Push the branch, open a pull request, and report the PR link and the CI result.
    The user reviews and merges once CI is green.
 
+## Feature workflow
+How a new feature goes from documentation to code. Every step that changes files also follows
+"Workflow for every task" (branch, commits, PR). **STOP** means: report, then wait for the user's
+answer or approval before doing anything else. Never skip a STOP point.
+
+0. **No documentation yet?** Do not invent it. Get it in one of three ways:
+   - the user gives a short description;
+   - interview the user with targeted questions: users, inputs, outputs, errors, boundaries,
+     permissions;
+   - for a feature that already exists: reconstruct the "as-built" behaviour from the code and the
+     running app, marking every statement [ASSUMPTION].
+
+   Save the draft in `docs/specs/<feature>.md` and **STOP** for the user's approval before step 1.
+1. **Spec.** The feature documentation is in `docs/specs/<feature>.md` — put there by the user,
+   or the draft from step 0 once approved.
+2. **Review.** Review the spec with the `wiegers-requirements-checker` skill and save the review
+   in `docs/requirements-review.md` as a new section (RR-00N).
+3. **Clarify.** If the verdict is not Ready: ask the user the review's questions and **STOP**.
+   After the answers, add the Resolution section to that review.
+4. **Requirements.** Write the approved requirements with IDs into `docs/requirements.md`.
+5. **Test cases.** Write test cases from the requirements into `docs/test-cases.md`. For DB checks,
+   include the SELECT queries; they may use only the real database schema (`app/schema.sql`).
+6. **Self-review**, before showing the test cases to the user. Check each case:
+   - one check per case;
+   - a verifiable expected result;
+   - defined test data;
+   - independent of other cases;
+   - not a duplicate of another case;
+   - linked to a requirement.
+
+   Fix what fails, then show the test cases and **STOP** for the user's approval.
+7. **Jira.** After approval, publish the test cases to Jira — once the Jira export exists. Until
+   then, skip this step and say so.
+8. **Implementation.** Implement the feature and the automated tests from the approved test cases,
+   open a PR, and **STOP** for the user's review.
+
 ## Hard rules
 - **Never push to `main` and never merge a pull request.** Every task goes through its own
   branch and PR; merging is the user's decision.
+- **Never skip a STOP point** of the "Feature workflow".
 - **Never change a test just to make it pass.** If a test fails: stop, show the error, say whether it
   looks like an app bug or a test bug and why. The user decides.
 - **Never weaken an assertion** (remove a check, widen an expected value, add a skip/xfail) without
@@ -96,6 +135,7 @@ utils/report_compare.py  Excel report vs database comparison
 config.py                settings from environment variables
 tests/ui/  tests/api/  tests/db/  tests/e2e/  tests/mobile/
 tests/conftest.py        fixtures: app server, browser page, API client, clean DB, test users
+docs/specs/              feature documentation from the user (one file per feature)
 docs/requirements.md     approved requirements (owned by the user)
 docs/requirements-review.md  requirements reviews and resolutions
 docs/test-cases.md       test cases (owned by the user)
