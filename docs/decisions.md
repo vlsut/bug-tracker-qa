@@ -141,3 +141,17 @@ needs no test-only code in the app (unlike an injectable clock). The 60 s margin
 row absorbs the real clock moving between the update and the request.
 **Limit:** It relies on direct database access, so it works only where the tests can reach the
 app's database (true for the in-process server and a local external server).
+
+## D-017 · Requirements review skill updated to v3.5, with evals
+**Decision:** The project skill `wiegers-requirements-checker` (D-014) is updated from v3.4 to
+v3.5, and its evaluation cases are versioned next to it in
+`.claude/skills/wiegers-requirements-checker/evals/` (3 cases: a clear `/health` requirement for a
+Quick Review, an orders API with conflicting discount rules, a vague password-reset story in
+Russian; each with a prompt, expected outcome and LLM graders).
+**What changed in v3.5:** a broader trigger description (specs, PRDs, readiness questions, any
+language); a rule for the report language when it goes to a file or another audience; and an
+"After the answers" rule — owner decisions go into a Resolution section of the same review
+instead of rewriting the findings (the format RR-001 already uses).
+**Why:** The skill shapes every requirements review, so a change to it should be checkable: the
+evals pin down behaviour the reviews rely on (conflicts tagged, nothing invented, proposals marked,
+language rules, verdicts). They are LLM-graded and are not part of CI.
