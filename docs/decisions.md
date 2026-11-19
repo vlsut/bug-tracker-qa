@@ -246,3 +246,20 @@ only test cases. The key is BTC rather than the planned BTTC because Jira derive
 project name at creation.
 **Unchanged:** everything else in D-020 (one issue per case, the ID label as lookup key,
 idempotent reruns, dry run, orphans reported and never deleted).
+
+## D-024 · A wider test-case self-review, three items enforced by tooling tests
+**Decision:** The self-review in "Feature workflow" step 6 gets ten more checks (self-contained
+cases, time handling, boundaries, decision tables, equivalence classes, priorities, lowest
+sufficient level, every place user input is shown, DB checks against the real schema, at most 3
+requirements per non-E2E case). Three are also `tooling` tests on `docs/test-cases.md`:
+- every SQL query in a "DB check" field runs on a fresh copy of `app/schema.sql` (named
+  parameters bound to dummy values); a query on a table that does not exist yet is reported as
+  "not yet run" (a skip with that reason) instead of failing, until the table is created;
+- Steps and Expected never name another test case ID;
+- a non-E2E case covers at most 3 requirements.
+**Why:** An audit of the 62 test cases (before implementation) found gaps the six original checks
+did not catch: counts that depended on other data, cases that borrowed data from other cases, a
+missing smallest boundary, a browser limit that counts characters differently from the
+requirement, permission combinations without a case, too many High priorities, server logic
+tested through the browser, and SQL that had never been run. The mechanical checks are cheap to
+automate and fail in CI instead of in review; the rest need judgement and stay in the checklist.

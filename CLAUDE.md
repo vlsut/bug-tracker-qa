@@ -83,13 +83,28 @@ answer or approval before doing anything else. Never skip a STOP point.
    Then write the missing test cases from the requirements into `docs/test-cases.md`. For DB
    checks, put the SELECT query and its expected result in the case's "DB check" field; queries
    may use only the real database schema (`app/schema.sql`).
-6. **Self-review**, before showing the test cases to the user. Check each case:
-   - one check per case;
-   - a verifiable expected result;
-   - defined test data;
-   - independent of other cases;
-   - not a duplicate of another case;
-   - linked to a requirement.
+6. **Self-review**, before showing the test cases to the user. Check each case; items marked
+   *(auto)* are also enforced by `tooling` tests (D-024):
+   - one check per case; a verifiable expected result; defined test data;
+   - not a duplicate of another case; linked to a requirement;
+   - **self-contained:** no fixed IDs or counts unless the precondition says only that data
+     exists; no data, steps or expected text taken from another case — repeat it
+     *(auto: no other TC ID in Steps or Expected)*;
+   - **time:** "now" is checked with bounds or a controlled clock; fixed times are inserted;
+   - **boundaries:** both sides of every limit and the smallest valid value; non-Latin text and
+     emoji wherever a character-counting rule applies; in every layer that enforces the limit;
+   - **decision table:** for features with roles and states, a table actor × state (× error
+     order) with a case for every cell;
+   - **equivalence classes:** every allowed value of a list, in every layer that offers it;
+   - **priorities:** High only for core flows, permissions, security and data integrity; give
+     the reason if more than about 40 % are High;
+   - **lowest sufficient level:** server logic is tested at API level; UI cases only for
+     rendering and interaction;
+   - **every place user input is shown:** every page and each kind of rendering (page text,
+     re-shown form values), and every variant of a page (e.g. open and closed bug);
+   - **DB checks** run against the real schema, or are marked "not yet run" with a plan
+     *(auto: every DB-check query runs on a fresh schema)*;
+   - **"Covers" lists at most 3 requirements** for non-E2E cases *(auto)*.
 
    Fix what fails, then show the reconciliation table together with the draft test cases and
    **STOP** for the user's approval.
