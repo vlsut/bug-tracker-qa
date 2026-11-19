@@ -104,3 +104,322 @@ Test users: see the test users table there. Passwords are referred to by their e
 - **Preconditions:** logged in as `tester`.
 - **Steps:** 1. Request `/bugs`.
 - **Expected:** the page is returned with the response header `Cache-Control` containing `no-store`.
+
+## Bugs
+
+Requirements: `docs/requirements.md` → "Bugs" (R10–R22); pages also fall under R5 and R6.2, the API under R8.
+Test users: `tester` (role user) and `admin` (role admin), as for login. "Another user's bug" means a bug authored by `admin` and viewed by `tester`.
+Bugs are created per case through the API as the stated author, or inserted in the database when a fixed `created_at` is needed. Unless a case says otherwise, a bug has title `Test bug`, no description and severity `Minor`. DB checks use the `bugs` table (columns `id`, `title`, `description`, `severity`, `status`, `author_id`, `created_at`, `closed_at`, `closed_by_id`) and `users`; times are stored as `YYYY-MM-DD HH:MM:SS` in UTC.
+Bug row query (Q-BUG): `SELECT b.title, b.description, b.severity, b.status, a.username AS author, b.created_at, b.closed_at, c.username AS closed_by FROM bugs b JOIN users a ON a.id = b.author_id LEFT JOIN users c ON c.id = b.closed_by_id WHERE b.id = :id`.
+
+---
+
+### TC-BUG-001 · Bug list shows all bugs to every user
+- **Priority:** High · **Level:** UI · **Markers:** `ui`, `smoke` · **Covers:** R10
+- **Preconditions:** three bugs exist: `Open by admin` (open, by `admin`), `Closed by tester` (closed, by `tester`), `Closed by admin` (closed, by `admin`); logged in as `tester`.
+- **Steps:** 1. Open `/bugs`.
+- **Expected:** the list has exactly three rows, with the titles `Open by admin`, `Closed by tester` and `Closed by admin`.
+
+### TC-BUG-002 · Bug list columns and values
+- **Priority:** Medium · **Level:** UI · **Markers:** `ui` · **Covers:** R10, R18
+- **Preconditions:** one bug by `admin` inserted with title `List row check`, severity `Major`, status `Open`, `created_at` `2026-11-19 14:05:09`; logged in as `tester`.
+- **Steps:** 1. Open `/bugs`.
+- **Expected:** the columns are ID, title, severity, status, author, created; the row shows the bug's ID, `List row check`, `Major`, `Open`, `admin`, `2026-11-19 14:05 UTC`.
+
+### TC-BUG-003 · Bug list order: newest first, equal times by highest ID
+- **Priority:** High · **Level:** UI · **Markers:** `ui` · **Covers:** R10, R18
+- **Preconditions:** bugs inserted in this order (so IDs increase): `A` at `2026-11-19 10:00:00`, `B` at `2026-11-19 10:00:05`, `C` at `2026-11-19 10:00:05`; logged in as `tester`.
+- **Steps:** 1. Open `/bugs`.
+- **Expected:** rows in the order `C`, `B`, `A`.
+
+### TC-BUG-004 · Create a bug in the UI
+- **Priority:** High · **Level:** UI · **Markers:** `ui`, `smoke` · **Covers:** R11
+- **Preconditions:** logged in as `tester`; no bugs exist.
+- **Data (parametrized):** title `Save button does nothing`; description `Clicking Save on the profile page has no effect.`; severity `Major`.
+- **Steps:** 1. Open `/bugs/new`. 2. Fill in title, description and severity. 3. Submit the form.
+- **Expected:** the browser is on `/bugs/<id>` of the new bug and the message "Bug created" is shown.
+
+### TC-BUG-005 · A new bug is stored with its initial values
+- **Priority:** High · **Level:** DB · **Markers:** `db` · **Covers:** R11, R18
+- **Preconditions:** logged in as `tester`; the test notes the UTC time, truncated to the second, before and after the create request.
+- **Steps:** 1. Create a bug with title `Initial values`, no description, severity `Minor`. 2. Run Q-BUG for its ID.
+- **Expected:** one row: title `Initial values`, description NULL, severity `Minor`, status `Open`, author `tester`, `created_at` between the two noted times (format `YYYY-MM-DD HH:MM:SS`), `closed_at` NULL, `closed_by` NULL.
+
+### TC-BUG-006 · A bug created in the UI is the same in the API and the database
+- **Priority:** High · **Level:** E2E · **Markers:** `e2e` · **Covers:** R11, R14, R21.2
+- **Preconditions:** logged in as `tester` in the browser and in the API client.
+- **Steps:** 1. Create the bug from TC-BUG-004 in the UI. 2. Request `GET /api/bugs/<id>` for the new ID. 3. Run Q-BUG for the new ID.
+- **Expected:** the API and the database both have title `Save button does nothing`, the description from TC-BUG-004, severity `Major`, status `Open`, author `tester`, the same `created_at` (API format `…Z`, DB format `… HH:MM:SS`), and no `closed_at` / `closed_by`.
+
+### TC-BUG-007 · Title is trimmed before saving
+- **Priority:** Medium · **Level:** API · **Markers:** `api`, `db` · **Covers:** R12, R12.1
+- **Preconditions:** logged in as `tester`.
+- **Data (parametrized):** title `"  Crash on save  "`; title `"\tCrash on save\n"`; title `"\n Crash on save \t "` — severity `Major`.
+- **Steps:** 1. `POST /api/bugs` with the data row. 2. Run Q-BUG for the new ID.
+- **Expected:** 201; the stored title is exactly `Crash on save`.
+
+### TC-BUG-008 · Empty or whitespace-only title is rejected by the server
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R12.1, R13.2, R22.3
+- **Preconditions:** logged in as `tester`; no bugs exist.
+- **Data (parametrized):** title `""`; title `"   "`; title `"\t\n"` — severity `Major`.
+- **Steps:** 1. `POST /api/bugs` with the data row. 2. Run `SELECT COUNT(*) FROM bugs`.
+- **Expected:** 400 with an `errors` object that has a `title` entry; the count is 0.
+
+### TC-BUG-009 · Title length limit is 200 characters after trimming
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R12.1, R13.2
+- **Preconditions:** logged in as `tester`.
+- **Data (parametrized):** 200 × `a` → accepted; 201 × `a` → rejected; 200 × `a` followed by one space → accepted — severity `Major`.
+- **Steps:** 1. `POST /api/bugs` with the data row.
+- **Expected:** accepted rows: 201 and the returned title has 200 characters; rejected row: 400 with `errors.title`.
+
+### TC-BUG-010 · Characters are counted as Unicode code points
+- **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R12, R12.1
+- **Preconditions:** logged in as `tester`.
+- **Data (parametrized):** 200 × `ж` → accepted; 200 × `🐞` → accepted; 201 × `🐞` → rejected — severity `Major`.
+- **Steps:** 1. `POST /api/bugs` with the data row.
+- **Expected:** accepted rows: 201 and the returned title equals the input; rejected row: 400 with `errors.title`.
+
+### TC-BUG-011 · Duplicate titles are allowed
+- **Priority:** Low · **Level:** API · **Markers:** `api` · **Covers:** R12.1
+- **Preconditions:** logged in as `tester`; a bug with title `Same title` exists.
+- **Steps:** 1. `POST /api/bugs` with title `Same title`, severity `Minor`.
+- **Expected:** 201 with a new ID different from the existing bug's ID.
+
+### TC-BUG-012 · Empty description is stored as NULL
+- **Priority:** High · **Level:** API · **Markers:** `api`, `db` · **Covers:** R12.2
+- **Preconditions:** logged in as `tester`.
+- **Data (parametrized):** description omitted; description `""`; description `"  \n\t "` — title `No description`, severity `Trivial`.
+- **Steps:** 1. `POST /api/bugs` with the data row. 2. Run `SELECT description IS NULL FROM bugs WHERE id = :id`.
+- **Expected:** 201; the query returns 1 (NULL, not an empty string).
+
+### TC-BUG-013 · Description is trimmed and limited to 2000 characters
+- **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R12.2, R13.2
+- **Preconditions:** logged in as `tester`.
+- **Data (parametrized):** 2000 × `d` → accepted; 2001 × `d` → rejected; `"\n"` + 2000 × `d` + `"  "` → accepted with 2000 characters — title `Description limit`, severity `Minor`.
+- **Steps:** 1. `POST /api/bugs` with the data row.
+- **Expected:** accepted rows: 201 and the returned description has exactly 2000 characters; rejected row: 400 with `errors.description`.
+
+### TC-BUG-014 · Each severity value is accepted
+- **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R12.3
+- **Preconditions:** logged in as `tester`.
+- **Data (parametrized):** `Critical`; `Major`; `Minor`; `Trivial` — title `Severity check`.
+- **Steps:** 1. `POST /api/bugs` with the data row.
+- **Expected:** 201 and the returned severity equals the data row.
+
+### TC-BUG-015 · Missing or unknown severity is rejected
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R12.3, R22.3
+- **Preconditions:** logged in as `tester`; no bugs exist.
+- **Data (parametrized):** severity omitted; `critical` (lower case); `Blocker`; `""` — title `Severity check`.
+- **Steps:** 1. `POST /api/bugs` with the data row. 2. Run `SELECT COUNT(*) FROM bugs`.
+- **Expected:** 400 with `errors.severity`; the count is 0.
+
+### TC-BUG-016 · The create form does not submit without required fields
+- **Priority:** Medium · **Level:** UI · **Markers:** `ui` · **Covers:** R13.1
+- **Preconditions:** logged in as `tester`.
+- **Data (parametrized):** title empty, severity chosen; title filled, no severity chosen; both empty.
+- **Steps:** 1. Open `/bugs/new`. 2. Fill the form with the data row. 3. Submit.
+- **Expected:** no request is sent to the server; the browser stays on `/bugs/new`; title and severity are marked as required.
+
+### TC-BUG-017 · The create form does not accept text over the limits
+- **Priority:** Medium · **Level:** UI · **Markers:** `ui` · **Covers:** R13.1
+- **Preconditions:** logged in as `tester`.
+- **Data (parametrized):** title field typed 201 × `a` → keeps 200; description field typed 2001 × `d` → keeps 2000.
+- **Steps:** 1. Open `/bugs/new`. 2. Type the data row's text into its field.
+- **Expected:** the field's value has the kept length (200 or 2000 characters).
+
+### TC-BUG-018 · Server rejection is shown in the form
+- **Priority:** High · **Level:** UI · **Markers:** `ui` · **Covers:** R13.2, R12.1
+- **Preconditions:** logged in as `tester`; no bugs exist.
+- **Steps:** 1. Open `/bugs/new`. 2. Enter title `"   "` (spaces pass the browser's required check) and severity `Major`. 3. Submit.
+- **Expected:** the browser stays on the create form with a message for the title field; `SELECT COUNT(*) FROM bugs` returns 0.
+
+### TC-BUG-019 · One 400 response lists all invalid fields
+- **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R22.3, R13.2
+- **Preconditions:** logged in as `tester`.
+- **Steps:** 1. `POST /api/bugs` with title `""`, severity `Blocker` and description 2001 × `d`.
+- **Expected:** 400; `errors` has exactly the keys `title`, `severity` and `description`.
+
+### TC-BUG-020 · Bug page shows all fields of a closed bug
+- **Priority:** High · **Level:** UI · **Markers:** `ui` · **Covers:** R14, R18
+- **Preconditions:** a bug by `tester` inserted with title `Page check`, description `Steps to reproduce`, severity `Critical`, `created_at` `2026-11-19 14:05:09`, closed by `admin` at `2026-11-19 15:30:00`; logged in as `tester`.
+- **Steps:** 1. Open `/bugs/<id>`.
+- **Expected:** the page shows the ID, `Page check`, `Steps to reproduce`, `Critical`, `Closed`, author `tester`, created `2026-11-19 14:05 UTC`, closed `2026-11-19 15:30 UTC`, closed by `admin`.
+
+### TC-BUG-021 · Bug page shows "-" for empty values
+- **Priority:** Medium · **Level:** UI · **Markers:** `ui` · **Covers:** R14
+- **Preconditions:** an open bug by `tester` without description; logged in as `tester`.
+- **Steps:** 1. Open `/bugs/<id>`.
+- **Expected:** description, closed at and closed by each show `-`.
+
+### TC-BUG-022 · Bug page for an ID that is not a bug gives 404
+- **Priority:** Low · **Level:** UI · **Markers:** `ui` · **Covers:** R14
+- **Preconditions:** logged in as `tester`; no bug with ID 999999 exists.
+- **Data (parametrized):** `/bugs/999999`; `/bugs/abc`; `/bugs/0`; `/bugs/-1`.
+- **Steps:** 1. Open the data row's URL.
+- **Expected:** the response status is 404.
+
+### TC-BUG-023 · The Close button is shown only to those who may close an open bug
+- **Priority:** High · **Level:** UI · **Markers:** `ui` · **Covers:** R15
+- **Data (parametrized):** open bug by `tester`, viewer `tester` → shown; open bug by `tester`, viewer `admin` → shown; open bug by `admin`, viewer `tester` → hidden; closed bug by `tester`, viewer `tester` → hidden.
+- **Steps:** 1. Log in as the viewer. 2. Open the bug's page.
+- **Expected:** the Close button is shown or hidden as in the data row.
+
+### TC-BUG-024 · Closing a bug in the UI
+- **Priority:** High · **Level:** UI · **Markers:** `ui`, `smoke` · **Covers:** R16
+- **Preconditions:** an open bug by `tester`; logged in as `tester`.
+- **Steps:** 1. Open `/bugs/<id>`. 2. Click "Close".
+- **Expected:** the browser stays on `/bugs/<id>`; the message "Bug closed" is shown; status `Closed`, closed at in the format `YYYY-MM-DD HH:MM UTC` and closed by `tester` are shown; the Close button is gone.
+
+### TC-BUG-025 · A closed bug is stored with its closing values
+- **Priority:** High · **Level:** DB · **Markers:** `db` · **Covers:** R16, R18
+- **Preconditions:** an open bug by `tester`; logged in as `tester` in the API client; the test notes the UTC time, truncated to the second, before and after the close request.
+- **Steps:** 1. `POST /api/bugs/<id>/close`. 2. Run Q-BUG for the ID.
+- **Expected:** status `Closed`, `closed_by` `tester`, `closed_at` between the two noted times (format `YYYY-MM-DD HH:MM:SS`); title, description, severity, author and `created_at` unchanged.
+
+### TC-BUG-026 · Admin can close another user's bug
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R15, R16, R21.4
+- **Preconditions:** an open bug by `tester`; logged in as `admin`.
+- **Steps:** 1. `POST /api/bugs/<id>/close`.
+- **Expected:** 200; the returned bug has status `Closed` and `closed_by` `admin`.
+
+### TC-BUG-027 · Close without permission is rejected in the API
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R17.1
+- **Preconditions:** an open bug by `admin`; logged in as `tester`.
+- **Steps:** 1. `POST /api/bugs/<id>/close`. 2. Run Q-BUG for the ID.
+- **Expected:** 403; the bug is still `Open` with `closed_at` and `closed_by` NULL.
+
+### TC-BUG-028 · Close without permission is rejected in the UI
+- **Priority:** High · **Level:** UI · **Markers:** `ui` · **Covers:** R17.1
+- **Preconditions:** an open bug by `admin`; logged in as `tester`.
+- **Steps:** 1. Open `/bugs/<id>`. 2. Send the page's close request anyway (as the hidden button would, from the browser session).
+- **Expected:** the bug page shows an error message; status is still `Open`; Q-BUG shows `closed_at` and `closed_by` NULL.
+
+### TC-BUG-029 · Closing an already closed bug is rejected in the API
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R17.2
+- **Preconditions:** a bug by `tester` closed by `tester` at `2026-11-19 15:30:00`; logged in as `admin`.
+- **Steps:** 1. `POST /api/bugs/<id>/close`. 2. Run Q-BUG for the ID.
+- **Expected:** 409; `closed_at` is still `2026-11-19 15:30:00` and `closed_by` still `tester`.
+
+### TC-BUG-030 · Closing an already closed bug is rejected in the UI
+- **Priority:** Medium · **Level:** UI · **Markers:** `ui` · **Covers:** R17.2
+- **Preconditions:** an open bug by `tester`; logged in as `tester`; the bug page is open in the browser.
+- **Steps:** 1. Close the bug through the API as `tester`. 2. Click "Close" on the page opened before.
+- **Expected:** the page shows a message and status `Closed`; Q-BUG shows the `closed_at` and `closed_by` set in step 1.
+
+### TC-BUG-031 · API timestamps are ISO 8601 in UTC to the second
+- **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R18, R21.2
+- **Preconditions:** a bug by `tester` inserted with `created_at` `2026-11-19 14:05:09`, closed at `2026-11-19 15:30:00`; logged in as `tester`.
+- **Steps:** 1. `GET /api/bugs/<id>`.
+- **Expected:** `created_at` is `2026-11-19T14:05:09Z` and `closed_at` is `2026-11-19T15:30:00Z`.
+
+### TC-BUG-032 · Markup in title and description is shown as plain text
+- **Priority:** High · **Level:** UI · **Markers:** `ui` · **Covers:** R19
+- **Preconditions:** logged in as `tester`; a bug created with title `<script>window.injected = 1</script><b>Bold</b>` and description `<img src=x onerror="window.injected = 2">`, severity `Major`.
+- **Steps:** 1. Open `/bugs`. 2. Open `/bugs/<id>`.
+- **Expected:** on both pages the title and description are shown as the exact typed text; no bold text is rendered and `window.injected` is undefined.
+
+### TC-BUG-033 · Bug pages fit mobile screens without horizontal scrolling
+- **Priority:** Medium · **Level:** UI (mobile emulation) · **Markers:** `mobile` · **Covers:** R20
+- **Preconditions:** a bug by `tester` with a title of 200 × `a` (no spaces) and a description of 2000 × `d`; logged in as `tester`.
+- **Data (parametrized):** pages `/bugs`, `/bugs/new`, `/bugs/<id>` × every device in the device list.
+- **Steps:** 1. Open the page on the emulated device.
+- **Expected:** the page has no horizontal scroll.
+
+### TC-BUG-034 · Anonymous API requests get 401, not a redirect
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R21.1
+- **Preconditions:** no session; one bug exists.
+- **Data (parametrized):** `GET /api/bugs`; `GET /api/bugs/<id>`; `POST /api/bugs` with a valid body; `POST /api/bugs/<id>/close`.
+- **Steps:** 1. Send the data row's request without following redirects.
+- **Expected:** 401; no `Location` header.
+
+### TC-BUG-035 · An expired session gets 401 in the API
+- **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R21.1, R8
+- **Preconditions:** logged in as `tester` in the API client.
+- **Steps:** 1. Set the session's last activity in the database to longer ago than the timeout (as TC-LOGIN-013). 2. `GET /api/bugs`.
+- **Expected:** 401.
+
+### TC-BUG-036 · A bug in the API has exactly the agreed fields
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R21.2, R21.3
+- **Preconditions:** an open bug by `admin` without description; logged in as `tester`.
+- **Steps:** 1. `GET /api/bugs/<id>`.
+- **Expected:** a JSON object with exactly the keys `id`, `title`, `description`, `severity`, `status`, `author`, `created_at`, `closed_at`, `closed_by`; `id` is an integer; `author` is `admin`; `description`, `closed_at` and `closed_by` are `null`.
+
+### TC-BUG-037 · The API list is a plain array in list order
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R21.3, R10
+- **Preconditions:** the three bugs `A`, `B`, `C` from TC-BUG-003; logged in as `tester`.
+- **Steps:** 1. `GET /api/bugs`.
+- **Expected:** a JSON array (not an object) whose titles are `C`, `B`, `A` in this order.
+
+### TC-BUG-038 · Create in the API returns 201 with the created bug
+- **Priority:** High · **Level:** API · **Markers:** `api`, `smoke` · **Covers:** R21.4, R11
+- **Preconditions:** logged in as `tester`.
+- **Steps:** 1. `POST /api/bugs` with title `API create`, description `From the API`, severity `Critical`.
+- **Expected:** 201; the body is the bug with those values, status `Open`, author `tester`, `closed_at` and `closed_by` `null`.
+
+### TC-BUG-039 · Close in the API returns 200 with the updated bug
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R21.4, R16
+- **Preconditions:** an open bug by `tester`; logged in as `tester`.
+- **Steps:** 1. `POST /api/bugs/<id>/close`.
+- **Expected:** 200; the body is the bug with status `Closed`, `closed_by` `tester` and `closed_at` in the format `YYYY-MM-DDTHH:MM:SSZ`.
+
+### TC-BUG-040 · Error precedence: 401 → 404 → 403 → 409
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R22.2
+- **Data (parametrized):** anonymous, close of unknown ID → 401; `tester`, close of unknown ID → 404; `tester`, close of a closed bug by `admin` → 403; `tester`, close of a closed bug by `tester` → 409.
+- **Steps:** 1. `POST /api/bugs/<id>/close` as in the data row.
+- **Expected:** the status code of the data row.
+
+### TC-BUG-041 · Create accepts only a JSON body
+- **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R22.3
+- **Preconditions:** logged in as `tester`; no bugs exist.
+- **Data (parametrized):** form-encoded body with valid fields; `text/plain` body with valid JSON text.
+- **Steps:** 1. `POST /api/bugs` with the data row. 2. Run `SELECT COUNT(*) FROM bugs`.
+- **Expected:** 415; the count is 0.
+
+### TC-BUG-042 · Invalid JSON is rejected with 400
+- **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R22.3
+- **Preconditions:** logged in as `tester`; no bugs exist.
+- **Steps:** 1. `POST /api/bugs` with `Content-Type: application/json` and the body `{"title": "Broken",`. 2. Run `SELECT COUNT(*) FROM bugs`.
+- **Expected:** 400; the count is 0.
+
+### TC-BUG-043 · Unknown fields and wrong types are rejected with 400
+- **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R22.3
+- **Preconditions:** logged in as `tester`; no bugs exist.
+- **Data (parametrized):** extra field `"foo": 1` → `errors.foo`; `"title": 123` → `errors.title`; `"severity": null` → `errors.severity`; `"description": 5` → `errors.description` — other fields valid.
+- **Steps:** 1. `POST /api/bugs` with the data row. 2. Run `SELECT COUNT(*) FROM bugs`.
+- **Expected:** 400 with the data row's key in `errors`; the count is 0.
+
+### TC-BUG-044 · Server-controlled fields are rejected on create
+- **Priority:** High · **Level:** API · **Markers:** `api` · **Covers:** R22.3
+- **Preconditions:** logged in as `tester`; no bugs exist.
+- **Data (parametrized):** `"id": 5`; `"status": "Closed"`; `"author": "admin"`; `"created_at": "2026-01-01T00:00:00Z"`; `"closed_at": "2026-01-01T00:00:00Z"`; `"closed_by": "admin"` — with a valid title and severity.
+- **Steps:** 1. `POST /api/bugs` with the data row. 2. Run `SELECT COUNT(*) FROM bugs`.
+- **Expected:** 400 with the field's own name in `errors`; the count is 0.
+
+### TC-BUG-045 · IDs that are not a bug get 404 in the API
+- **Priority:** Low · **Level:** API · **Markers:** `api` · **Covers:** R22.4
+- **Preconditions:** logged in as `tester`; no bug with ID 999999 exists.
+- **Data (parametrized):** IDs `999999`, `abc`, `0`, `-1` × `GET /api/bugs/<id>` and `POST /api/bugs/<id>/close`.
+- **Steps:** 1. Send the data row's request.
+- **Expected:** 404.
+
+### TC-BUG-046 · Anonymous users are redirected from the new bug pages
+- **Priority:** High · **Level:** UI · **Markers:** `ui` · **Covers:** R5
+- **Preconditions:** browser is not logged in; one bug exists.
+- **Data (parametrized):** `/bugs/new`; `/bugs/<id>`.
+- **Steps:** 1. Open the data row's page.
+- **Expected:** redirected to `/login`; no bug content is shown.
+- **Note:** `/bugs` itself is covered by TC-LOGIN-007.
+
+### TC-BUG-047 · API errors other than validation share one body format
+- **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R22.1
+- **Data (parametrized):** 401 — anonymous `GET /api/bugs`; 403 — `tester` closes an open bug by `admin`; 404 — `GET /api/bugs/999999`; 409 — `tester` closes a closed bug by `tester`; 415 — `POST /api/bugs` with a `text/plain` body.
+- **Steps:** 1. Send the data row's request.
+- **Expected:** the body is a JSON object with exactly one key, `error`, whose value is a non-empty string.
+
+### TC-BUG-048 · Bug pages are not cached by the browser
+- **Priority:** Medium · **Level:** API · **Markers:** `api` · **Covers:** R6.2
+- **Preconditions:** one bug exists; logged in as `tester`.
+- **Data (parametrized):** `/bugs/new`; `/bugs/<id>`.
+- **Steps:** 1. Request the data row's page.
+- **Expected:** the response header `Cache-Control` contains `no-store`.
+- **Note:** `/bugs` is covered by TC-LOGIN-014; the same reason applies (automated browsers reload on Back).
