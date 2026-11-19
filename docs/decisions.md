@@ -187,6 +187,29 @@ draft at the test-case approval STOP. The rest of D-018 is unchanged.
 cases made obsolete by changed requirements are found instead of silently kept. The owner sees
 the effect on the existing suite, not only the new cases, before approving.
 
+## D-020 · Test cases are exported to Jira as Tasks, found again by their ID label
+**Decision:** `tools/jira_export.py` creates one Jira issue per test case in `docs/test-cases.md`
+(project `JIRA_PROJECT_KEY`, issue type `JIRA_ISSUE_TYPE`, default `Task`). Summary
+`TC-LOGIN-001 · Successful login (user)`; description (Atlassian Document Format) with priority,
+level, markers, covered requirements, preconditions, data, numbered steps, expected result and
+notes; labels `test-case`, the requirement IDs and the test case ID; Jira priority = test case
+priority. The test case ID label is the lookup key (`labels = "TC-LOGIN-001"`): none → create,
+one → update if changed, more than one → error, nothing written. Change detection compares
+summary, issue type, priority, the export's own labels and a fingerprint of the generated content
+stored in the description footer. Labels people add in Jira are kept; issues labelled
+`test-case` whose case is no longer in the docs are reported, never deleted. `--dry-run` makes
+read-only lookups and writes nothing. Credentials come from `JIRA_*` in `.env`; the token is masked
+in `repr` and never part of output or errors. Tests use an in-memory fake of the Jira API; CI
+never calls Jira.
+**Why:** BTQA (team-managed) has no test issue type (no Xray/Zephyr); Task is the closest
+standalone work item, and the type is configurable if a "Test Case" type is added later. Labels
+match exactly in JQL, while summary search is tokenised, so the ID label makes reruns idempotent.
+Jira normalises stored descriptions, so comparing them field by field would report false changes;
+the fingerprint does not. `docs/test-cases.md` stays the source, so Jira edits are overwritten on
+the next change (the footer says so).
+**Alternatives considered:** summary search (fuzzy, duplicates possible); issue entity properties
+(invisible, one extra call per issue); a Jira test-management app (not installed).
+
 ## D-021 · docs/test-cases.md stays the source of test cases, read by a strict parser
 **Decision:** Test cases stay in Markdown, edited by the QA lead. `tools/case_parser.py` reads
 them; the format is a contract: an unknown field, a missing Priority line, Steps or Expected, a
