@@ -160,11 +160,8 @@ language rules, verdicts). They are LLM-graded and are not part of CI.
 **Decision:** New features follow the "Feature workflow" in `CLAUDE.md`: spec in
 `docs/specs/<feature>.md` → review with the `wiegers-requirements-checker` skill (RR-00N) →
 clarification with the owner if the verdict is not Ready → approved requirements with IDs →
-reconciliation with the existing test cases (requirement → existing / new / outdated case;
-Change Impact Review mode of the skill when requirements changed) → only the missing test cases
-(DB checks with SELECT queries on the real schema) → self-review of the test cases → owner
-approval of the reconciliation table and the draft → Jira (once the export exists) →
-implementation and automated tests in a PR.
+test cases (DB checks with SELECT queries on the real schema) → self-review of the test cases →
+owner approval → Jira (once the export exists) → implementation and automated tests in a PR.
 If there is no spec, the agent drafts one from the owner's short description, from an interview,
 or — for an existing feature — from the as-built behaviour of the code and the running app, with
 every statement marked [ASSUMPTION]; the owner approves the draft first.
@@ -174,9 +171,18 @@ test-case approval, and PR review. STOP points are never skipped.
 review the agent's own guesses — so a missing spec comes from the owner or from observed
 behaviour, never made up. Each stage produces a versioned artifact that the next one is traced
 to (spec → RR → R-IDs → TC → tests), and the owner decides at the points where the human owns
-the outcome (D-007): what the requirements mean, what is tested, and what gets merged.
-Reconciling before drafting keeps one case per behaviour: requirements already covered are not
-tested twice, and cases made obsolete by changed requirements are found instead of silently
-kept. The self-review checklist catches common test-case defects (several checks in one case,
+the outcome (D-007): what the requirements mean, what is tested, and what gets merged. The
+self-review checklist catches common test-case defects (several checks in one case,
 unverifiable results, undefined data, dependent cases, duplicates, untraced cases) before the
 owner spends time on them.
+
+## D-019 · Reconcile with existing test cases before drafting new ones
+**Decision:** Extends D-018. In the "Feature workflow", writing test cases (step 5) starts with a
+reconciliation against `docs/test-cases.md`: map each requirement to the existing cases that
+cover it, flag duplicates and outdated cases (with the `wiegers-requirements-checker` skill's
+Change Impact Review mode when requirements changed), and draft only what is missing. The
+reconciliation table (requirement → existing / new / outdated case) is shown together with the
+draft at the test-case approval STOP. The rest of D-018 is unchanged.
+**Why:** It keeps one case per behaviour: requirements already covered are not tested twice, and
+cases made obsolete by changed requirements are found instead of silently kept. The owner sees
+the effect on the existing suite, not only the new cases, before approving.
