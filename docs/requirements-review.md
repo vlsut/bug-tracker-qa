@@ -150,6 +150,11 @@ Owner decisions on the questions in section 4. Approved requirements: `docs/requ
 | RISK-001 | Brute-force protection out of scope for the demo app | Recorded as out of scope; risk accepted |
 | OBS-001 | All pages except `/login` and `/health` are protected | R5 rewritten |
 
+**Clarification (2026-11-19, after the test-case audit for RR-002):** DEF-007 — any request
+within the timeout resets the idle timer (the 30 minutes start again from that request). It was
+implied by "inactivity" and implemented that way; R8 now states it explicitly, so TC-LOGIN-013's
+DB check no longer rests on a derived reading.
+
 **Status after resolution:** Requirements Readiness — Ready for R1–R9 except the open items;
 Test Design Readiness — Ready; Automation Readiness — Ready (status-code checks deferred).
 

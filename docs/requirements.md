@@ -54,8 +54,9 @@ Passwords are never stored in plain text. They are stored with an adaptive, salt
 password-hashing function, so two users with the same password have different stored values.
 
 **R8. Session expiry.**
-A session expires after 30 minutes of inactivity. The next request after expiry is treated as
-anonymous (R5). The timeout is configurable so tests can use a short value.
+A session expires after 30 minutes of inactivity. Any request made with a valid session resets
+the idle timer: the 30 minutes start again from that request. The next request after expiry is
+treated as anonymous (R5). The timeout is configurable so tests can use a short value.
 
 **R9. Mobile layout of the login page.**
 On every device in the project's device list, the login form is fully visible without horizontal
