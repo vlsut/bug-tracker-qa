@@ -81,8 +81,8 @@ answer or approval before doing anything else. Never skip a STOP point.
 
    Keep a reconciliation table: requirement → existing case / new case / outdated case.
    Then write the missing test cases from the requirements into `docs/test-cases.md`. For DB
-   checks, include the SELECT queries; they may use only the real database schema
-   (`app/schema.sql`).
+   checks, put the SELECT query and its expected result in the case's "DB check" field; queries
+   may use only the real database schema (`app/schema.sql`).
 6. **Self-review**, before showing the test cases to the user. Check each case:
    - one check per case;
    - a verifiable expected result;

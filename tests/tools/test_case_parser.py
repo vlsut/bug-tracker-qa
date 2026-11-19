@@ -14,6 +14,7 @@ VALID_CASE = """\
 - **Preconditions:** user `tester` exists.
 - **Steps:** 1. Open `/login`. 2. Click "Log in".
 - **Expected:** stays on `/login`.
+- **DB check:** `SELECT COUNT(*) FROM sessions` returns 0.
 """
 
 
@@ -46,6 +47,7 @@ def test_valid_case_is_read_field_by_field(tmp_path: Path) -> None:
     assert case.preconditions == "user `tester` exists."
     assert case.steps == ["Open `/login`.", 'Click "Log in".']
     assert case.expected == "stays on `/login`."
+    assert case.db_check == "`SELECT COUNT(*) FROM sessions` returns 0."
 
 
 def test_template_heading_is_not_a_test_case(tmp_path: Path) -> None:

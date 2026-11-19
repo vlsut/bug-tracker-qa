@@ -24,6 +24,7 @@ CASES_MD = """\
 - **Preconditions:** user `tester` exists.
 - **Steps:** 1. Open `/login`. 2. Click "Log in".
 - **Expected:** redirected to `/bugs`.
+- **DB check:** `SELECT COUNT(*) FROM sessions` returns 1.
 
 ### TC-DEMO-002 · Second case
 - **Priority:** Low · **Level:** API · **Markers:** `api` · **Covers:** R3
@@ -218,6 +219,17 @@ def test_description_has_numbered_steps_and_inline_code(tmp_path: Path) -> None:
     code = [n for n in json.dumps(content).split('"marks"') if '"code"' in n]
     assert code, "backticked text should be inline code"
     assert "Source fingerprint: " in json.dumps(content)
+
+
+def test_db_check_follows_the_expected_result(tmp_path: Path) -> None:
+    with_check, without_check = cases_from(tmp_path)
+
+    def headings(case: TestCase) -> list[str]:
+        content = issue_fields(case, SETTINGS)["description"]["content"]
+        return [n["content"][0]["text"] for n in content if n["type"] == "heading"]
+
+    assert headings(with_check)[-2:] == ["Expected result", "DB check"]
+    assert "DB check" not in headings(without_check)
 
 
 def test_token_never_appears_in_output_or_errors(

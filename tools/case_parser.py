@@ -27,6 +27,7 @@ TEXT_FIELDS = {
     "Data (parametrized)": "data",
     "Steps": "steps_text",
     "Expected": "expected",
+    "DB check": "db_check",
     "Note": "note",
     "Also check": "also_check",
     "Why at API level": "why_api_level",
@@ -57,6 +58,7 @@ class TestCase:
     data: str = ""
     steps_text: str = ""
     expected: str = ""
+    db_check: str = ""
     note: str = ""
     also_check: str = ""
     why_api_level: str = ""
