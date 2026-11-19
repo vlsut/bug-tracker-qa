@@ -52,6 +52,7 @@ Test users: see the test users table there. Passwords are referred to by their e
 ### TC-LOGIN-006 · Username is case-sensitive and not trimmed
 - **Priority:** Medium · **Level:** UI · **Markers:** `ui` · **Covers:** R1, R3
 - **Data (parametrized):** `Tester`; `TESTER`; ` tester` (leading space); `tester ` (trailing space) — password `TEST_USER_PASSWORD`.
+- **Steps:** 1. Open `/login`. 2. Enter the data row's username and `TEST_USER_PASSWORD`. 3. Click "Log in".
 - **Expected:** login fails with "Invalid username or password"; no session.
 
 ### TC-LOGIN-007 · Anonymous access is redirected to login
