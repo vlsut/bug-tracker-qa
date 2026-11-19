@@ -7,7 +7,7 @@ import click
 from flask import Flask
 
 import config
-from app import db, users
+from app import auth, bugs, db, users
 
 
 def create_app(overrides: dict[str, Any] | None = None) -> Flask:
@@ -16,11 +16,16 @@ def create_app(overrides: dict[str, Any] | None = None) -> Flask:
     ``overrides`` replaces settings from ``config`` (tests use it for a temporary database).
     """
     app = Flask(__name__)
-    app.config.from_mapping(DATABASE=config.DB_PATH)
+    app.config.from_mapping(
+        DATABASE=config.DB_PATH,
+        SESSION_IDLE_TIMEOUT=config.SESSION_IDLE_TIMEOUT,
+    )
     if overrides:
         app.config.update(overrides)
 
     db.init_app(app)
+    auth.init_app(app)
+    app.register_blueprint(bugs.bp)
     app.cli.add_command(init_db_command)
 
     @app.get("/health")
