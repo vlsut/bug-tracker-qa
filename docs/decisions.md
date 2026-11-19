@@ -264,11 +264,13 @@ requirement, permission combinations without a case, too many High priorities, s
 tested through the browser, and SQL that had never been run. The mechanical checks are cheap to
 automate and fail in CI instead of in review; the rest need judgement and stay in the checklist.
 
-## D-025 · Checklist for implementation PRs: break-test new tests, keep the README current
-**Decision:** Every implementation PR (Feature workflow step 8) shows that each new test fails
-when the behaviour it guards is broken on purpose (the app is restored afterwards, and the result
-is reported in the PR), and updates the "What is covered" table in `README.md`.
+## D-025 · PR checklist: break-test every new product test, keep the README current
+**Decision:** A PR checklist in `CLAUDE.md` ("Workflow for every task"): every new product test is
+checked by breaking the behaviour it guards on purpose — the test must fail — and the code is then
+restored; the PR description says what was broken and which test failed. Every PR that adds or
+removes product tests updates the "What is covered" table in `README.md`.
 **Why:** A test that cannot fail proves nothing: breaking the app on purpose showed, for example,
 that the UI Back-button check (TC-LOGIN-008) passes even without the `no-store` header, which led
-to TC-LOGIN-014. The README states this practice and shows test counts to readers outside the
-project, so both must stay true as tests are added.
+to TC-LOGIN-014. Writing down what was broken makes the check reviewable. The README states this
+practice and shows test counts to readers outside the project, so both must stay true as tests
+are added or removed.
