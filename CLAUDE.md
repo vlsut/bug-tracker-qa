@@ -53,6 +53,11 @@ depends on lives here, not in chats:
 8. Push the branch, open a pull request, and report the PR link and the CI result.
    The user reviews and merges once CI is green.
 
+**PR checklist** (D-025):
+- Every new product test is checked by breaking the behaviour it guards on purpose; the test must
+  fail; then the code is restored. The PR description says what was broken and which test failed.
+- Every PR that adds or removes product tests updates the "What is covered" table in `README.md`.
+
 ## Feature workflow
 How a new feature goes from documentation to code. Every step that changes files also follows
 "Workflow for every task" (branch, commits, PR). **STOP** means: report, then wait for the user's
@@ -112,7 +117,7 @@ answer or approval before doing anything else. Never skip a STOP point.
    `uv run python -m tools.jira_export --dry-run`, show the output, and run it without
    `--dry-run` only after the user's OK (D-020).
 8. **Implementation.** Implement the feature and the automated tests from the approved test cases,
-   open a PR, and **STOP** for the user's review.
+   open a PR (following the PR checklist), and **STOP** for the user's review.
 
 ## Hard rules
 - **Never push to `main` and never merge a pull request.** Every task goes through its own
