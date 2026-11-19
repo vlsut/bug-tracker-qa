@@ -27,8 +27,10 @@ depends on lives here, not in chats:
 - `CLAUDE.md` — rules for the agent;
 - `docs/requirements.md` — approved requirements with stable IDs (R1, R4.2, …), open items and
   out-of-scope decisions (owned by the user). Requirements are the basis for test cases.
-- `docs/requirements-review.md` — requirements reviews (RR-00N): findings and the owner's
-  resolutions that led to the approved requirements.
+- `docs/requirements-review.md` — requirements reviews: findings and the owner's resolutions
+  that led to the approved requirements. Reviews are done with the project skill
+  `.claude/skills/wiegers-requirements-checker/SKILL.md` and saved here, one section per review
+  (RR-001, RR-002, …).
 - `docs/test-cases.md` — what to test (owned by the user). Every test case refers to the
   requirement IDs it covers; a behaviour without a requirement is not tested until one is added.
 - `docs/decisions.md` — decision log: what was decided and why. Read it before proposing changes

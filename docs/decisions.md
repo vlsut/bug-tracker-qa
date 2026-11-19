@@ -110,3 +110,13 @@ downloadable by anyone); on a match the upload is skipped and the job fails, nam
 variable. Playwright traces record typed text, so they are kept locally and never uploaded.
 **Note:** The passwords previously in `docs/` remain in git history; they are retired, and new
 values are used.
+
+## D-014 · Requirements reviews with a project skill
+**Decision:** Requirements are reviewed with the project skill `wiegers-requirements-checker`
+(`.claude/skills/wiegers-requirements-checker/SKILL.md`, versioned in this repository). Each review
+is saved in `docs/requirements-review.md` as its own section (RR-001, RR-002, …), followed by the
+owner's resolution.
+**Why:** The same method, evidence tags and finding format for every review, independent of the
+chat or the person running it; the skill is part of the repository like any other tool
+configuration, so its version is visible next to the reviews it produced. Keeping reviews and
+resolutions in one file gives a history of how each requirement was decided.
