@@ -108,6 +108,8 @@ def description_body(case: TestCase) -> list[dict[str, Any]]:
     else:
         body.append(_paragraph(steps[0]))
     body += [_heading("Expected result"), _paragraph(case.expected)]
+    if case.db_check:
+        body += [_heading("DB check"), _paragraph(case.db_check)]
     for title, text in case.extra_fields:
         body += [_heading(title), _paragraph(text)]
     return body

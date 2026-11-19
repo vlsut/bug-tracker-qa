@@ -14,6 +14,7 @@ VALID_CASE = """\
 - **Preconditions:** user `tester` exists.
 - **Steps:** 1. Open `/login`. 2. Click "Log in".
 - **Expected:** stays on `/login`.
+- **DB check:** `SELECT COUNT(*) FROM sessions` returns 0.
 """
 
 
@@ -26,8 +27,11 @@ def write(tmp_path: Path, text: str) -> Path:
 def test_real_document_parses_into_all_test_cases() -> None:
     cases = parse()
 
-    assert [case.id for case in cases] == [f"TC-LOGIN-{n:03d}" for n in range(1, 15)]
-    first = cases[0]
+    ids = [case.id for case in cases]
+    assert len(ids) == len(set(ids))
+    # The document grows with every feature; the login cases must stay in it.
+    assert {f"TC-LOGIN-{n:03d}" for n in range(1, 15)} <= set(ids)
+    first = next(case for case in cases if case.id == "TC-LOGIN-001")
     assert first.summary == "TC-LOGIN-001 · Successful login (user)"
     assert (first.priority, first.level, first.requirements) == ("High", "UI", ["R1", "R2"])
     assert first.markers == ["ui", "smoke"]
@@ -43,6 +47,7 @@ def test_valid_case_is_read_field_by_field(tmp_path: Path) -> None:
     assert case.preconditions == "user `tester` exists."
     assert case.steps == ["Open `/login`.", 'Click "Log in".']
     assert case.expected == "stays on `/login`."
+    assert case.db_check == "`SELECT COUNT(*) FROM sessions` returns 0."
 
 
 def test_template_heading_is_not_a_test_case(tmp_path: Path) -> None:

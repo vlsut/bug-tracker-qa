@@ -16,7 +16,7 @@ from tools.jira_export import Report, export, format_report, issue_fields
 pytestmark = pytest.mark.tooling
 
 TOKEN = "fake-token-must-never-appear"
-SETTINGS = JiraSettings("https://example.atlassian.net", "qa@example.com", TOKEN, "BTQA", "Task")
+SETTINGS = JiraSettings("https://example.atlassian.net", "qa@example.com", TOKEN, "BTC", "Task")
 
 CASES_MD = """\
 ### TC-DEMO-001 · First case
@@ -24,6 +24,7 @@ CASES_MD = """\
 - **Preconditions:** user `tester` exists.
 - **Steps:** 1. Open `/login`. 2. Click "Log in".
 - **Expected:** redirected to `/bugs`.
+- **DB check:** `SELECT COUNT(*) FROM sessions` returns 1.
 
 ### TC-DEMO-002 · Second case
 - **Priority:** Low · **Level:** API · **Markers:** `api` · **Covers:** R3
@@ -59,7 +60,7 @@ class FakeJira:
         self.fail_with: int | None = None
 
     def add(self, summary: str, labels: list[str]) -> str:
-        key = f"BTQA-{len(self.issues) + 100}"
+        key = f"BTC-{len(self.issues) + 100}"
         self.issues[key] = {"key": key, "fields": {"summary": summary, "labels": labels}}
         return key
 
@@ -74,7 +75,7 @@ class FakeJira:
             found = [i for i in self.issues.values() if label in i["fields"].get("labels", [])]
             return FakeResponse(200, {"issues": copy.deepcopy(found), "isLast": True})
         if method == "POST" and path == "/rest/api/3/issue":
-            key = f"BTQA-{len(self.issues) + 1}"
+            key = f"BTC-{len(self.issues) + 1}"
             self.issues[key] = {"key": key, "fields": self._stored(kwargs["json"]["fields"])}
             return FakeResponse(201, {"key": key})
         if method == "PUT" and path.startswith("/rest/api/3/issue/"):
@@ -182,7 +183,7 @@ def test_several_issues_with_one_id_are_reported_and_not_written(
 
     error = next(a for a in report.actions if a.case.id == "TC-DEMO-001")
     assert error.kind == "error"
-    assert "BTQA-100, BTQA-101" in error.message
+    assert "BTC-100, BTC-101" in error.message
     assert report.failed
     assert all("TC-DEMO-001" not in str(call) for call in jira.writes())
 
@@ -218,6 +219,17 @@ def test_description_has_numbered_steps_and_inline_code(tmp_path: Path) -> None:
     code = [n for n in json.dumps(content).split('"marks"') if '"code"' in n]
     assert code, "backticked text should be inline code"
     assert "Source fingerprint: " in json.dumps(content)
+
+
+def test_db_check_follows_the_expected_result(tmp_path: Path) -> None:
+    with_check, without_check = cases_from(tmp_path)
+
+    def headings(case: TestCase) -> list[str]:
+        content = issue_fields(case, SETTINGS)["description"]["content"]
+        return [n["content"][0]["text"] for n in content if n["type"] == "heading"]
+
+    assert headings(with_check)[-2:] == ["Expected result", "DB check"]
+    assert "DB check" not in headings(without_check)
 
 
 def test_token_never_appears_in_output_or_errors(
