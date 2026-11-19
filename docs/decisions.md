@@ -162,11 +162,16 @@ language rules, verdicts). They are LLM-graded and are not part of CI.
 clarification with the owner if the verdict is not Ready → approved requirements with IDs →
 test cases (DB checks with SELECT queries on the real schema) → self-review of the test cases →
 owner approval → Jira (once the export exists) → implementation and automated tests in a PR.
-The agent stops for the owner at three points: open review questions, test-case approval, and
-PR review. STOP points are never skipped.
-**Why:** Defects are cheapest to fix in the spec. Each stage produces a versioned artifact that
-the next one is traced to (spec → RR → R-IDs → TC → tests), and the owner decides at the points
-where the human owns the outcome (D-007): what the requirements mean, what is tested, and what
-gets merged. The self-review checklist catches common test-case defects (several checks in one
-case, unverifiable results, undefined data, dependent cases, duplicates, untraced cases) before
-the owner spends time on them.
+If there is no spec, the agent drafts one from the owner's short description, from an interview,
+or — for an existing feature — from the as-built behaviour of the code and the running app, with
+every statement marked [ASSUMPTION]; the owner approves the draft first.
+The agent stops for the owner at four points: spec draft approval, open review questions,
+test-case approval, and PR review. STOP points are never skipped.
+**Why:** Defects are cheapest to fix in the spec, and a spec the agent invented would only
+review the agent's own guesses — so a missing spec comes from the owner or from observed
+behaviour, never made up. Each stage produces a versioned artifact that the next one is traced
+to (spec → RR → R-IDs → TC → tests), and the owner decides at the points where the human owns
+the outcome (D-007): what the requirements mean, what is tested, and what gets merged. The
+self-review checklist catches common test-case defects (several checks in one case,
+unverifiable results, undefined data, dependent cases, duplicates, untraced cases) before the
+owner spends time on them.

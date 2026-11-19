@@ -58,7 +58,16 @@ How a new feature goes from documentation to code. Every step that changes files
 "Workflow for every task" (branch, commits, PR). **STOP** means: report, then wait for the user's
 answer or approval before doing anything else. Never skip a STOP point.
 
-1. **Spec.** The user puts the feature documentation in `docs/specs/<feature>.md`.
+0. **No documentation yet?** Do not invent it. Get it in one of three ways:
+   - the user gives a short description;
+   - interview the user with targeted questions: users, inputs, outputs, errors, boundaries,
+     permissions;
+   - for a feature that already exists: reconstruct the "as-built" behaviour from the code and the
+     running app, marking every statement [ASSUMPTION].
+
+   Save the draft in `docs/specs/<feature>.md` and **STOP** for the user's approval before step 1.
+1. **Spec.** The feature documentation is in `docs/specs/<feature>.md` — put there by the user,
+   or the draft from step 0 once approved.
 2. **Review.** Review the spec with the `wiegers-requirements-checker` skill and save the review
    in `docs/requirements-review.md` as a new section (RR-00N).
 3. **Clarify.** If the verdict is not Ready: ask the user the review's questions and **STOP**.
