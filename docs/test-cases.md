@@ -476,3 +476,9 @@ Bugs are created per case through the API as the stated author, or inserted in t
 - **Steps:** 1. Open `/bugs/<id>`. 2. Send the page's close request anyway (from the browser session).
 - **Expected:** the bug page shows a message and status `Closed`.
 - **DB check:** `SELECT b.closed_at, c.username FROM bugs b JOIN users c ON c.id = b.closed_by_id WHERE b.id = :id` returns `2026-11-19 15:30:00`, `admin` (unchanged).
+
+### TC-BUG-054 · The list page shows bugs newest first, equal times by highest ID
+- **Priority:** Medium · **Level:** UI · **Markers:** `ui` · **Covers:** R10
+- **Preconditions:** only these three bugs exist, inserted in this order (so IDs increase): `A` at `2026-11-19 10:00:00`, `B` at `2026-11-19 10:00:05`, `C` at `2026-11-19 10:00:05`; logged in as `tester`.
+- **Steps:** 1. Open `/bugs`.
+- **Expected:** the rows are in the order `C`, `B`, `A` (the same order as the API list).
