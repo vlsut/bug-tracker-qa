@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: vague-password-reset-story
+expected_outcome: |
+  A review in Russian (evidence tags and IDs in English) that flags the vague words, the missing link lifetime,
+  the undefined "strong password" rule, link reuse or account enumeration, and the ambiguous AC4,
+  without presenting any invented number as agreed, and with verdict Needs Clarification or Blocked.

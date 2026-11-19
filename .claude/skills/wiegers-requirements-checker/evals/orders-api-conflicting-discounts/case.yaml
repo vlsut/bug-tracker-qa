@@ -1,0 +1,5 @@
+schema_version: "1.1"
+name: orders-api-conflicting-discounts
+expected_outcome: |
+  A Standard Audit in English that tags BR-2 vs BR-3 as [CONFLICT] and asks for precedence, flags the undefined
+  error response of BR-4, flags quantity boundaries, keeps proposed rules marked [PROPOSED], and stays within 10 findings.

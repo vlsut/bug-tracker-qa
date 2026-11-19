@@ -1,0 +1,5 @@
+schema_version: "1.1"
+name: clear-health-requirement-quick
+expected_outcome: |
+  A short Quick Review: the requirement is essentially testable; at most a few low-impact findings,
+  no High or Critical severity, no padding.
