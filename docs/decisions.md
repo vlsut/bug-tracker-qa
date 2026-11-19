@@ -160,8 +160,11 @@ language rules, verdicts). They are LLM-graded and are not part of CI.
 **Decision:** New features follow the "Feature workflow" in `CLAUDE.md`: spec in
 `docs/specs/<feature>.md` → review with the `wiegers-requirements-checker` skill (RR-00N) →
 clarification with the owner if the verdict is not Ready → approved requirements with IDs →
-test cases (DB checks with SELECT queries on the real schema) → self-review of the test cases →
-owner approval → Jira (once the export exists) → implementation and automated tests in a PR.
+reconciliation with the existing test cases (requirement → existing / new / outdated case;
+Change Impact Review mode of the skill when requirements changed) → only the missing test cases
+(DB checks with SELECT queries on the real schema) → self-review of the test cases → owner
+approval of the reconciliation table and the draft → Jira (once the export exists) →
+implementation and automated tests in a PR.
 If there is no spec, the agent drafts one from the owner's short description, from an interview,
 or — for an existing feature — from the as-built behaviour of the code and the running app, with
 every statement marked [ASSUMPTION]; the owner approves the draft first.
@@ -171,7 +174,9 @@ test-case approval, and PR review. STOP points are never skipped.
 review the agent's own guesses — so a missing spec comes from the owner or from observed
 behaviour, never made up. Each stage produces a versioned artifact that the next one is traced
 to (spec → RR → R-IDs → TC → tests), and the owner decides at the points where the human owns
-the outcome (D-007): what the requirements mean, what is tested, and what gets merged. The
-self-review checklist catches common test-case defects (several checks in one case,
+the outcome (D-007): what the requirements mean, what is tested, and what gets merged.
+Reconciling before drafting keeps one case per behaviour: requirements already covered are not
+tested twice, and cases made obsolete by changed requirements are found instead of silently
+kept. The self-review checklist catches common test-case defects (several checks in one case,
 unverifiable results, undefined data, dependent cases, duplicates, untraced cases) before the
 owner spends time on them.

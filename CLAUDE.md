@@ -73,8 +73,16 @@ answer or approval before doing anything else. Never skip a STOP point.
 3. **Clarify.** If the verdict is not Ready: ask the user the review's questions and **STOP**.
    After the answers, add the Resolution section to that review.
 4. **Requirements.** Write the approved requirements with IDs into `docs/requirements.md`.
-5. **Test cases.** Write test cases from the requirements into `docs/test-cases.md`. For DB checks,
-   include the SELECT queries; they may use only the real database schema (`app/schema.sql`).
+5. **Test cases.** First reconcile with the existing test cases in `docs/test-cases.md`:
+   - map each requirement to the existing cases that cover it;
+   - flag duplicates and outdated cases (when requirements changed, use the skill's
+     Change Impact Review mode);
+   - draft only what is missing.
+
+   Keep a reconciliation table: requirement → existing case / new case / outdated case.
+   Then write the missing test cases from the requirements into `docs/test-cases.md`. For DB
+   checks, include the SELECT queries; they may use only the real database schema
+   (`app/schema.sql`).
 6. **Self-review**, before showing the test cases to the user. Check each case:
    - one check per case;
    - a verifiable expected result;
@@ -83,7 +91,8 @@ answer or approval before doing anything else. Never skip a STOP point.
    - not a duplicate of another case;
    - linked to a requirement.
 
-   Fix what fails, then show the test cases and **STOP** for the user's approval.
+   Fix what fails, then show the reconciliation table together with the draft test cases and
+   **STOP** for the user's approval.
 7. **Jira.** After approval, publish the test cases to Jira — once the Jira export exists. Until
    then, skip this step and say so.
 8. **Implementation.** Implement the feature and the automated tests from the approved test cases,
