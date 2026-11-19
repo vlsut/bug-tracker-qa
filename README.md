@@ -31,6 +31,7 @@ uv run flask --app app run --debug --port 5001   # the app
 uv run pytest                                    # all tests; HTML report in reports/, failure screenshots and traces in test-results/
 uv run pytest -m smoke                           # one level: ui, api, db, e2e, smoke, mobile
 uv run ruff check . && uv run ruff format --check .
+uv run python -m tools.jira_export --dry-run     # test cases → Jira (needs JIRA_* in .env)
 ```
 
 ## Layout
@@ -39,6 +40,7 @@ app/        Flask app (system under test)
 pages/      Page Objects
 api/        API client
 utils/      SQL helpers, Excel-vs-DB comparison
+tools/      internal tools: test-case parser, Jira export
 config.py   settings from environment variables
 tests/      ui / api / db / e2e / mobile
 docs/       requirements and their review, test cases, decision log

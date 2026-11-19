@@ -93,8 +93,9 @@ answer or approval before doing anything else. Never skip a STOP point.
 
    Fix what fails, then show the reconciliation table together with the draft test cases and
    **STOP** for the user's approval.
-7. **Jira.** After approval, publish the test cases to Jira — once the Jira export exists. Until
-   then, skip this step and say so.
+7. **Jira.** After approval, publish the test cases to Jira: run
+   `uv run python -m tools.jira_export --dry-run`, show the output, and run it without
+   `--dry-run` only after the user's OK (D-020).
 8. **Implementation.** Implement the feature and the automated tests from the approved test cases,
    open a PR, and **STOP** for the user's review.
 
@@ -130,7 +131,8 @@ answer or approval before doing anything else. Never skip a STOP point.
     `test_login_with_wrong_password_shows_error`.
   - Use `pytest.mark.parametrize` for data-driven cases; test data lives in fixtures or data files,
     not scattered through tests.
-  - pytest markers: `ui`, `api`, `db`, `e2e`, `smoke`, `mobile` (registered in `pyproject.toml`).
+  - pytest markers: `ui`, `api`, `db`, `e2e`, `smoke`, `mobile`, plus `req`/`tc` for traceability and
+    `tooling` for tests of internal tools (registered in `pyproject.toml`).
 - **Reporting:** HTML report via pytest-html; on UI test failure keep a screenshot and a
   Playwright trace.
 
@@ -141,8 +143,9 @@ pages/                   Page Objects
 api/                     API client
 utils/db_manager.py      all SQL queries used by tests
 utils/report_compare.py  Excel report vs database comparison
+tools/                   internal tools: test-case parser, Jira export (not the app)
 config.py                settings from environment variables
-tests/ui/  tests/api/  tests/db/  tests/e2e/  tests/mobile/
+tests/ui/  tests/api/  tests/db/  tests/e2e/  tests/mobile/  tests/tools/
 tests/conftest.py        fixtures: app server, browser page, API client, clean DB, test users
 docs/specs/              feature documentation from the user (one file per feature)
 docs/requirements.md     approved requirements (owned by the user)
@@ -186,6 +189,8 @@ pytest-html, ruff, GitHub Actions.
 - Run all tests: `uv run pytest`
 - Run one level: `uv run pytest -m api` (also `ui`, `db`, `e2e`, `smoke`, `mobile`)
 - Lint and format: `uv run ruff check .` and `uv run ruff format .`
+- Export test cases to Jira: `uv run python -m tools.jira_export --dry-run` (then without `--dry-run`)
+- Run only the tool tests: `uv run pytest -m tooling`
 
 ## Language
 - Chat: **Russian or English** — reply in the language the user writes in.
