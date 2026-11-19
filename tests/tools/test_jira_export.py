@@ -16,7 +16,7 @@ from tools.jira_export import Report, export, format_report, issue_fields
 pytestmark = pytest.mark.tooling
 
 TOKEN = "fake-token-must-never-appear"
-SETTINGS = JiraSettings("https://example.atlassian.net", "qa@example.com", TOKEN, "BTQA", "Task")
+SETTINGS = JiraSettings("https://example.atlassian.net", "qa@example.com", TOKEN, "BTC", "Task")
 
 CASES_MD = """\
 ### TC-DEMO-001 · First case
@@ -60,7 +60,7 @@ class FakeJira:
         self.fail_with: int | None = None
 
     def add(self, summary: str, labels: list[str]) -> str:
-        key = f"BTQA-{len(self.issues) + 100}"
+        key = f"BTC-{len(self.issues) + 100}"
         self.issues[key] = {"key": key, "fields": {"summary": summary, "labels": labels}}
         return key
 
@@ -75,7 +75,7 @@ class FakeJira:
             found = [i for i in self.issues.values() if label in i["fields"].get("labels", [])]
             return FakeResponse(200, {"issues": copy.deepcopy(found), "isLast": True})
         if method == "POST" and path == "/rest/api/3/issue":
-            key = f"BTQA-{len(self.issues) + 1}"
+            key = f"BTC-{len(self.issues) + 1}"
             self.issues[key] = {"key": key, "fields": self._stored(kwargs["json"]["fields"])}
             return FakeResponse(201, {"key": key})
         if method == "PUT" and path.startswith("/rest/api/3/issue/"):
@@ -183,7 +183,7 @@ def test_several_issues_with_one_id_are_reported_and_not_written(
 
     error = next(a for a in report.actions if a.case.id == "TC-DEMO-001")
     assert error.kind == "error"
-    assert "BTQA-100, BTQA-101" in error.message
+    assert "BTC-100, BTC-101" in error.message
     assert report.failed
     assert all("TC-DEMO-001" not in str(call) for call in jira.writes())
 

@@ -234,3 +234,15 @@ Jira export, in `tests/tools/`) are skipped by the traceability check that requi
 Bug Tracker must do for its users. Internal tools are not product behaviour and have no entries in
 `docs/requirements.md`; inventing product requirements for them would blur the traceability the
 rule exists for. Their expected behaviour is recorded in their decision entries (D-020, D-021).
+
+## D-023 · Test cases live in their own Jira project, BTC
+**Decision:** Extends D-020. The Jira export writes test cases to the separate project **BTC**
+("BTQA Test Cases", team-managed), set by `JIRA_PROJECT_KEY`; the issue type stays `Task`. BTQA is
+no longer the test-case project. The test-case issues exported there earlier (BTQA-4…BTQA-17,
+label `test-case`) are listed for the owner, who deletes them; the agent deletes nothing in Jira.
+**Why:** Test cases are documentation of what is tested, not work items; a project of their own
+keeps them apart from BTQA's tasks and lets the export's orphan check and label searches cover
+only test cases. The key is BTC rather than the planned BTTC because Jira derived it from the
+project name at creation.
+**Unchanged:** everything else in D-020 (one issue per case, the ID label as lookup key,
+idempotent reruns, dry run, orphans reported and never deleted).
