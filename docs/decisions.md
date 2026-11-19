@@ -209,6 +209,9 @@ the fingerprint does not. `docs/test-cases.md` stays the source, so Jira edits a
 the next change (the footer says so).
 **Alternatives considered:** summary search (fuzzy, duplicates possible); issue entity properties
 (invisible, one extra call per issue); a Jira test-management app (not installed).
+**Known limitations:** Jira search is eventually consistent, so two runs within a few seconds
+could create duplicates; the next run detects them and writes nothing for those cases. Revisit
+if the export ever runs automatically (e.g. from CI).
 
 ## D-021 · docs/test-cases.md stays the source of test cases, read by a strict parser
 **Decision:** Test cases stay in Markdown, edited by the QA lead. `tools/case_parser.py` reads
