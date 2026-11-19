@@ -112,7 +112,10 @@ answer or approval before doing anything else. Never skip a STOP point.
    `uv run python -m tools.jira_export --dry-run`, show the output, and run it without
    `--dry-run` only after the user's OK (D-020).
 8. **Implementation.** Implement the feature and the automated tests from the approved test cases,
-   open a PR, and **STOP** for the user's review.
+   open a PR, and **STOP** for the user's review. Checklist for every implementation PR:
+   - each new test is shown to fail when the behaviour it guards is broken on purpose (then the
+     app is restored); report the result in the PR;
+   - the "What is covered" table in `README.md` is updated (test counts and requirements).
 
 ## Hard rules
 - **Never push to `main` and never merge a pull request.** Every task goes through its own
