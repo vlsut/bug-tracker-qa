@@ -186,3 +186,25 @@ draft at the test-case approval STOP. The rest of D-018 is unchanged.
 **Why:** It keeps one case per behaviour: requirements already covered are not tested twice, and
 cases made obsolete by changed requirements are found instead of silently kept. The owner sees
 the effect on the existing suite, not only the new cases, before approving.
+
+## D-021 · docs/test-cases.md stays the source of test cases, read by a strict parser
+**Decision:** Test cases stay in Markdown, edited by the QA lead. `tools/case_parser.py` reads
+them; the format is a contract: an unknown field, a missing Priority line, Steps or Expected, a
+malformed line, a priority outside High/Medium/Low, a malformed requirement ID or a duplicate ID
+stops parsing with the case ID and line number. A test parses the real document in CI, so a
+format slip fails the PR, not the export.
+**Why:** One file, readable in PR diffs, and the QA lead's workflow stays unchanged. A YAML source
+generating the Markdown would enforce structure by schema, but it means two files, a generator, a
+CI check that they match, editing YAML instead of prose, and lost hand edits in the generated
+file. The cases already follow a regular format, so a strict parser gets most of the safety.
+**Revisit:** when the suite grows to hundreds of cases or needs fields that Markdown carries
+badly (e.g. structured data tables, links between cases).
+
+## D-022 · Tests of internal tools are exempt from the requirement marker
+**Decision:** Tests marked `tooling` (tests of internal tools such as the test-case parser and the
+Jira export, in `tests/tools/`) are skipped by the traceability check that requires a
+`req(...)` marker on every test.
+**Why:** A deliberate exception: the requirement rule (D-012) covers product behaviour — what the
+Bug Tracker must do for its users. Internal tools are not product behaviour and have no entries in
+`docs/requirements.md`; inventing product requirements for them would blur the traceability the
+rule exists for. Their expected behaviour is recorded in their decision entries (D-020, D-021).

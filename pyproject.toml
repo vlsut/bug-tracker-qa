@@ -55,4 +55,5 @@ markers = [
     "mobile: responsive layout on emulated mobile devices",
     "req(*ids): requirement IDs from docs/requirements.md that the test covers (mandatory)",
     "tc(*ids): test case IDs from docs/test-cases.md that the test automates",
+    "tooling: tests of internal tools, not product behaviour; exempt from req (D-022)",
 ]
